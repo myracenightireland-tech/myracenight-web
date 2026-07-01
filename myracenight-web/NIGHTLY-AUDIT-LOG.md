@@ -79,3 +79,12 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
   the contact email.
 - Verification: `npm run build` GREEN; prerendered homepage HTML contains the pricing headings.
   Confirmed the homepage placeholder stats (€2.5M+ / 500+ / 50K+ / 4.9★) are unchanged.
+
+### Item 4 — Viewport meta (allow zoom) — DONE
+- Removed `maximumScale: 1` and `userScalable: false` from `viewport` in `src/app/layout.tsx`.
+  Kept `width: device-width`, `initialScale: 1`, `viewportFit: 'cover'`, themeColor.
+- Verification: `npm run build` GREEN. Prerendered `<meta name="viewport">` is now
+  `width=device-width, initial-scale=1, viewport-fit=cover` — no `user-scalable=no` and no
+  `maximum-scale` anywhere in the built HTML, so pinch-zoom is now permitted (accessibility fix).
+  Only the zoom-lock attributes were removed; layout-affecting values (width/initial-scale/
+  viewport-fit) are unchanged, so page layout is unaffected.
