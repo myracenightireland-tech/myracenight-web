@@ -128,3 +128,45 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
   a distinct meta description. Confirmed all 8 site pages (home, login, register, terms, privacy,
   faq, pricing, how-it-works) have mutually distinct descriptions. The protected
   `dashboard/overview` page was not modified.
+
+---
+
+## FINAL SUMMARY
+
+**Final production build: GREEN** (`NEXT_PUBLIC_API_URL=https://api.example.com npm run build`,
+clean `.next` rebuild — "✓ Compiled successfully", all routes generated). Pushed to origin so
+Vercel can deploy.
+
+### Items done (7)
+1. **/terms + /privacy** — DRAFT GDPR-aware pages with visible DRAFT notices; register consent
+   links now resolve.
+2. **Login fields in initial HTML** — `<noscript>` fallback adds email/password fields to
+   view-source; zero changes to auth logic (login, phone/PIN, mustChangePassword redirect).
+3. **Homepage pricing** — honest beta section, no invented number; placeholder stats untouched.
+4. **Viewport** — removed `maximum-scale`/`user-scalable=no`; pinch-zoom enabled, layout unaffected.
+5. **Meta descriptions** — home/login/register/terms/privacy (+ new pages) all unique & accurate.
+7. **Contact email** — `mailto:myracenightireland@gmail.com` visible in homepage footer.
+8. **FAQ / How It Works / Pricing pages** — created, footer-nav linked, each with own description;
+   overview page not touched.
+
+### Items skipped (1)
+6. **Testimonials** — skipped per Decisions (none exist yet in beta; not fabricating any).
+
+### Decisions applied
+- Terms/Privacy: professional DRAFT copy + visible "DRAFT — pending legal review" note, dated today.
+- Pricing: honest beta wording, NO invented percentage.
+- Homepage stats: left exactly as-is (placeholders).
+- Contact email: myracenightireland@gmail.com used throughout.
+- Safest-reversible choices logged inline (noscript for login; local build env shim; .gitignore).
+
+### Needs your input in the morning
+1. **Terms & Privacy are DRAFTS** — must go through legal review before public launch (both carry
+   the visible DRAFT banner).
+2. **Register page still says "85% of proceeds to your club"** (`src/app/auth/register/page.tsx`),
+   a hard-coded figure that conflicts with the beta "no fixed percentage" decision. Left unchanged
+   (out of scope — not one of the 8 items). Consider aligning it with the honest pricing copy.
+3. **`/auth/change-password` route does not exist** in the frontend repo, yet login redirects there
+   on `mustChangePassword`. Pre-existing; left as-is (auth flow is protected/out of scope). May 404
+   in production — worth confirming.
+4. **Local builds need `NEXT_PUBLIC_API_URL`** set (Vercel already has it). No files changed for
+   this; documented at top of this log.
