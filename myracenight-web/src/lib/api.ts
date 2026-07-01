@@ -210,6 +210,17 @@ class ApiClient {
     }
   }
 
+  async changePassword(data: {
+    newPassword: string;
+    currentPassword?: string;
+    newPin?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/auth/refresh', {
       method: 'POST',

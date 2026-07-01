@@ -170,3 +170,54 @@ Vercel can deploy.
    in production — worth confirming.
 4. **Local builds need `NEXT_PUBLIC_API_URL`** set (Vercel already has it). No files changed for
    this; documented at top of this log.
+
+---
+
+## Guest first-login: /auth/change-password page (2026-07-01)
+
+Resolves audit item #3 above — the missing route that login redirects to on `mustChangePassword`.
+
+### Backend contract (READ ONLY — backend unchanged)
+`POST /api/auth/change-password` — `src/auth/auth.controller.ts` + `auth.service.ts`
+- **Auth:** `@UseGuards(JwtAuthGuard)` → requires `Authorization: Bearer <accessToken>` header
+  (same as every other authenticated call; the frontend `ApiClient.request()` already attaches it).
+- **Request body:** `{ currentPassword?: string; newPassword: string; newPin?: string }`.
+- **Guest flow:** when the user's `mustChangePassword` is true, the service SKIPS the
+  `currentPassword` check — so a first-login guest only needs to send `{ newPassword }`. No
+  temp/current password field is required (and none is shown).
+- **Validation:** `newPassword` min length **6** (`BadRequestException` otherwise); `newPin`, if
+  sent, must be exactly 4 digits (not used here).
+- **Side effect:** sets `mustChangePassword = false` in the DB.
+- **Returns:** HTTP 200 `{ success: true, message: 'Password updated successfully' }`.
+
+### What I built (FRONTEND only, additions only — 0 deletions)
+- `src/app/auth/change-password/page.tsx` — client component. New password + confirm-new-password
+  fields (no current-password field, since the backend doesn't require it for guests). Dark/gold
+  design matching login. Validates required, `new == confirm`, min length 6. Show/hide toggle,
+  loading state (`isLoading`), inline error box. Redirects to `/auth/login` if not authenticated.
+  On success: clears `mustChangePassword` in the store, then role-routes — PLAYER → `/dashboard/player`,
+  HOST/SUPER_ADMIN → `/dashboard` (identical to the login page's routing).
+- `src/app/auth/change-password/layout.tsx` — unique metadata (title "Change Password - MyRaceNight"),
+  same pattern as login/register layouts.
+- `src/lib/api.ts` — added `ApiClient.changePassword({ newPassword, currentPassword?, newPin? })`
+  calling the endpoint via the shared `request()` (auth header handled centrally).
+- `src/lib/auth.ts` — added `changePassword(newPassword)` Zustand action following the
+  login/register pattern: calls `api.changePassword`, then updates the persisted `user` with
+  `mustChangePassword: false` so the redirect loop ends.
+
+### Not touched (per hard rules)
+- Login, phone/PIN, and the `mustChangePassword` redirect logic — unchanged.
+- `src/app/dashboard/overview/page.tsx` — confirmed unchanged via `git diff --quiet`.
+- Backend — no changes (nothing to commit is expected there).
+
+### Verification
+- `npm run build` **GREEN** — "✓ Compiled successfully". New route listed:
+  `○ /auth/change-password  2.7 kB` (prerendered).
+- `git diff --stat`: api.ts +11, auth.ts +16 — **27 insertions, 0 deletions** (pure additions).
+- Form fields render; submit posts `{ newPassword }` to `/api/auth/change-password` with the
+  Bearer token attached by the shared API client.
+
+### Needs your input
+- Phone/PIN guests: this page sets a **password** (backend accepts `newPassword` and clears the
+  flag regardless of auth method). If a phone-only guest should instead set a new 4-digit **PIN**,
+  say so and I'll add a PIN variant using the backend's existing `newPin` field.

@@ -13,6 +13,7 @@ interface AuthState {
   // Actions
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (data: RegisterData) => Promise<AuthResponse>;
+  changePassword: (newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   setAuth: (response: AuthResponse) => void;
   clearAuth: () => void;
@@ -51,6 +52,21 @@ export const useAuth = create<AuthState>()(
         } catch (error) {
           get().clearAuth();
           throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      changePassword: async (newPassword: string) => {
+        set({ isLoading: true });
+        try {
+          await api.changePassword({ newPassword });
+          // Guest first-login flow complete: clear the flag in the store so
+          // the app stops redirecting back to /auth/change-password.
+          const currentUser = get().user;
+          if (currentUser) {
+            set({ user: { ...currentUser, mustChangePassword: false } });
+          }
         } finally {
           set({ isLoading: false });
         }
