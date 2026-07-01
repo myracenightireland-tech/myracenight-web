@@ -88,3 +88,15 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
   `maximum-scale` anywhere in the built HTML, so pinch-zoom is now permitted (accessibility fix).
   Only the zoom-lock attributes were removed; layout-affecting values (width/initial-scale/
   viewport-fit) are unchanged, so page layout is unaffected.
+
+### Item 5 — Unique meta descriptions — DONE
+- Homepage: added a `metadata` export to `src/app/page.tsx` (was inheriting the generic root
+  layout description).
+- Login & Register are client components (can't export metadata), so added server-component
+  route layouts `src/app/auth/login/layout.tsx` and `src/app/auth/register/layout.tsx` that
+  export their own `metadata` (title + description) and just render `children`. Auth pages
+  themselves untouched.
+- Terms & Privacy already carry unique descriptions from Item 1.
+- Verification: `npm run build` GREEN. Extracted `<meta name="description">` from each
+  prerendered page — all five (home, login, register, terms, privacy) are present and mutually
+  distinct and accurate.

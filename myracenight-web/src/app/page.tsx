@@ -1,5 +1,12 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ArrowRight, Trophy, Users, Zap, Star } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'MyRaceNight - Fundraising Race Nights for Irish Clubs',
+  description:
+    'MyRaceNight helps Irish clubs run unforgettable fundraising race nights — sell tickets, create horses with AI commentary and follow a live leaderboard. Free to host, most proceeds go to your club.',
+};
 
 export default function HomePage() {
   return (
