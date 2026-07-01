@@ -111,3 +111,20 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
 - Verification: `npm run build` GREEN; prerendered homepage HTML contains
   `mailto:myracenightireland@gmail.com`. The link is visible in the footer and the mailto
   opens the user's email client to that address.
+
+### Item 8 — FAQ, How It Works, Pricing pages + footer nav — DONE
+- Created three server-component pages matching the existing dark/gold design (same nav header
+  + "Back to home" as terms/privacy):
+  - `src/app/how-it-works/page.tsx` — 5-step journey (create event → sell tickets → AI
+    commentary → live leaderboard → funds to club), CTA to register.
+  - `src/app/pricing/page.tsx` — honest beta pricing (free to host, small fee off tickets that
+    scales with ticket price, most proceeds to club, no fixed % yet), contact email, CTA.
+  - `src/app/faq/page.tsx` — 7 Q&As (what it is, cost, joining, payments, GDPR/data, licensing
+    responsibility, support), contact email, CTA.
+  - Each has its own unique `metadata` (title + description).
+- Added a footer nav on the homepage linking How It Works / Pricing / FAQ / Terms / Privacy.
+- Verification: `npm run build` GREEN; `/faq`, `/pricing`, `/how-it-works` all prerender as
+  static routes. Each is reachable via the footer nav (links present in homepage HTML) and has
+  a distinct meta description. Confirmed all 8 site pages (home, login, register, terms, privacy,
+  faq, pricing, how-it-works) have mutually distinct descriptions. The protected
+  `dashboard/overview` page was not modified.

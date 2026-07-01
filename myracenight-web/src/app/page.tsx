@@ -217,19 +217,40 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-night-lighter py-12">
-        <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏇</span>
-            <span className="font-display text-xl font-bold text-gray-400">MyRaceNight</span>
-          </div>
-          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-sm">
-            <a
-              href="mailto:myracenightireland@gmail.com"
-              className="text-gray-400 hover:text-gold transition-colors"
-            >
-              myracenightireland@gmail.com
-            </a>
-            <p className="text-gray-500">© 2025 MyRaceNight. All rights reserved.</p>
+        <div className="max-w-7xl mx-auto px-8 flex flex-col gap-8">
+          {/* Footer nav */}
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
+            <Link href="/how-it-works" className="text-gray-400 hover:text-gold transition-colors">
+              How It Works
+            </Link>
+            <Link href="/pricing" className="text-gray-400 hover:text-gold transition-colors">
+              Pricing
+            </Link>
+            <Link href="/faq" className="text-gray-400 hover:text-gold transition-colors">
+              FAQ
+            </Link>
+            <Link href="/terms" className="text-gray-400 hover:text-gold transition-colors">
+              Terms
+            </Link>
+            <Link href="/privacy" className="text-gray-400 hover:text-gold transition-colors">
+              Privacy
+            </Link>
+          </nav>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏇</span>
+              <span className="font-display text-xl font-bold text-gray-400">MyRaceNight</span>
+            </div>
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-sm">
+              <a
+                href="mailto:myracenightireland@gmail.com"
+                className="text-gray-400 hover:text-gold transition-colors"
+              >
+                myracenightireland@gmail.com
+              </a>
+              <p className="text-gray-500">© 2025 MyRaceNight. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </footer>
