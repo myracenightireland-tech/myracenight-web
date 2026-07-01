@@ -47,3 +47,25 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
   the contact email. Register consent links `href="/terms"` and `href="/privacy"` now resolve
   to real pages.
 - Decision: dated both documents "Last updated: 1 July 2026" (today) as a reasonable draft date.
+
+### Repo hygiene fix (during Item 1/2)
+- The repo had **no `.gitignore`**, so an initial `git add -A` swept `node_modules` (~26.6k
+  files) and `.next` build output into a commit. I reset that commit (nothing was pushed),
+  added a `.gitignore` (`node_modules`, `.next`, `out`, `.env*.local`, `next-env.d.ts`, etc.),
+  and recommitted Item 1 with only the intended source files. All later commits are clean.
+  `tsconfig.tsbuildinfo` was already tracked in the original upload, so it is left tracked.
+
+### Item 2 — Login fields in initial HTML — DONE
+- Root cause: `LoginForm` calls `useSearchParams()` inside a `<Suspense>`, so on the server
+  only the spinner fallback renders and the form fields are absent from the initial HTML
+  (confirmed against prerendered `.next/server/app/auth/login.html`).
+- Fix (chosen: the safest, explicitly-allowed option — a `<noscript>` fallback that changes
+  NO auth logic): added a `<noscript>` block to `LoginPage` containing a static, styled
+  email + password sign-in form plus an "enable JavaScript / phone-PIN login needs JS" notice,
+  and a CSS rule hiding the interactive container when JS is off. The interactive `LoginForm`
+  (client-side `login()`, email/password + phone/PIN, and the `mustChangePassword` →
+  `/auth/change-password` redirect) is byte-for-byte unchanged.
+- Verification: `npm run build` GREEN. Prerendered login HTML now contains `name="email"`,
+  `name="password"`, "Email address", "Welcome back" and the JS notice (visible in view-source).
+  Diff of `LoginForm` shows zero changes to auth logic (only the outer wrapper gained the
+  noscript block and a `.js-login-form` container div).

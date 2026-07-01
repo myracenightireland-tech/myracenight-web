@@ -199,9 +199,83 @@ export default function LoginPage() {
     <div className="min-h-screen bg-night flex">
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center px-8 py-12">
-        <Suspense fallback={<Spinner size="lg" />}>
-          <LoginForm />
-        </Suspense>
+        {/*
+          SSR/no-JS fallback: the interactive form below relies on client-side
+          hydration (useSearchParams forces its Suspense boundary to render only the
+          spinner on the server), so the real fields are absent from the initial HTML.
+          This <noscript> block puts the login fields into the server-rendered HTML for
+          crawlers, view-source and no-JS users. It does not run or alter any auth logic;
+          the interactive form still handles all sign-in when JavaScript is enabled.
+        */}
+        <noscript>
+          <style>{`.js-login-form{display:none!important}`}</style>
+          <div className="w-full max-w-md">
+            <Link href="/" className="flex items-center gap-3 mb-12">
+              <div className="w-12 h-12 bg-gold rounded-xl flex items-center justify-center">
+                <span className="text-2xl">🏇</span>
+              </div>
+              <span className="font-display text-2xl font-bold gradient-text">MyRaceNight</span>
+            </Link>
+
+            <h1 className="text-3xl font-display font-bold mb-2">Welcome back</h1>
+            <p className="text-gray-400 mb-8">Sign in to your account</p>
+
+            <form method="post" action="/auth/login" className="space-y-6">
+              <div className="w-full">
+                <label htmlFor="ns-email" className="block text-sm font-medium text-gray-300 mb-2">
+                  Email address
+                </label>
+                <input
+                  id="ns-email"
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  className="w-full py-3 px-4 bg-night-lighter border border-night-lighter rounded-lg text-white placeholder-gray-500"
+                  required
+                />
+              </div>
+
+              <div className="w-full">
+                <label htmlFor="ns-password" className="block text-sm font-medium text-gray-300 mb-2">
+                  Password
+                </label>
+                <input
+                  id="ns-password"
+                  type="password"
+                  name="password"
+                  placeholder="••••••••"
+                  className="w-full py-3 px-4 bg-night-lighter border border-night-lighter rounded-lg text-white placeholder-gray-500"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center font-semibold rounded-lg bg-gold text-night px-6 py-3 text-lg min-h-[48px]"
+              >
+                Sign In
+              </button>
+            </form>
+
+            <p className="mt-6 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg text-yellow-300 text-sm">
+              JavaScript is required to sign in on MyRaceNight, including phone/PIN login and
+              remembering where to send you afterwards. Please enable JavaScript and reload this page.
+            </p>
+
+            <p className="mt-8 text-center text-gray-400">
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/register" className="text-gold hover:text-gold-light font-medium">
+                Create one
+              </Link>
+            </p>
+          </div>
+        </noscript>
+
+        <div className="js-login-form w-full flex items-center justify-center">
+          <Suspense fallback={<Spinner size="lg" />}>
+            <LoginForm />
+          </Suspense>
+        </div>
       </div>
 
       {/* Right side - Image/Pattern */}
