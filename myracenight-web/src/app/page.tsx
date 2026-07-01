@@ -222,9 +222,15 @@ export default function HomePage() {
             <span className="text-2xl">🏇</span>
             <span className="font-display text-xl font-bold text-gray-400">MyRaceNight</span>
           </div>
-          <p className="text-gray-500 text-sm">
-            © 2025 MyRaceNight. All rights reserved.
-          </p>
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-sm">
+            <a
+              href="mailto:myracenightireland@gmail.com"
+              className="text-gray-400 hover:text-gold transition-colors"
+            >
+              myracenightireland@gmail.com
+            </a>
+            <p className="text-gray-500">© 2025 MyRaceNight. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>

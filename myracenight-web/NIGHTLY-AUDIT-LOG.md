@@ -100,3 +100,14 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
 - Verification: `npm run build` GREEN. Extracted `<meta name="description">` from each
   prerendered page — all five (home, login, register, terms, privacy) are present and mutually
   distinct and accurate.
+
+### Item 6 — Testimonials — SKIPPED (per Decisions)
+- No testimonials exist yet (beta) and the instruction is to NOT fabricate any. Skipped
+  intentionally; no code change. Nothing to verify.
+
+### Item 7 — Contact email in footer — DONE
+- Added a `mailto:myracenightireland@gmail.com` link to the homepage footer (visible text =
+  the address), styled to match, next to the copyright line.
+- Verification: `npm run build` GREEN; prerendered homepage HTML contains
+  `mailto:myracenightireland@gmail.com`. The link is visible in the footer and the mailto
+  opens the user's email client to that address.
