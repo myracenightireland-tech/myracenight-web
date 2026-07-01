@@ -69,3 +69,13 @@ Date: 2026-07-01. FRONTEND ONLY. Overview page and auth logic protected.
   `name="password"`, "Email address", "Welcome back" and the JS notice (visible in view-source).
   Diff of `LoginForm` shows zero changes to auth logic (only the outer wrapper gained the
   noscript block and a `.js-login-form` container div).
+
+### Item 3 — Homepage pricing section — DONE
+- Added an honest, beta-flagged pricing section (`id="pricing"`) to the homepage between the
+  Features and closing CTA. Content per Decisions: "Beta pricing — subject to confirmation"
+  badge; three cards — Free to host / Small platform fee (scales with ticket price, higher
+  ticket → lower fee) / Most goes to your club (exact rate confirmed per event); closing note
+  that there is no fixed percentage yet and pricing may change. NO invented number. Includes
+  the contact email.
+- Verification: `npm run build` GREEN; prerendered homepage HTML contains the pricing headings.
+  Confirmed the homepage placeholder stats (€2.5M+ / 500+ / 50K+ / 4.9★) are unchanged.

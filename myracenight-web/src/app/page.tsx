@@ -132,6 +132,62 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Pricing */}
+        <div id="pricing" className="mt-32">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/30 rounded-full text-sm text-gold mb-6">
+              <Star className="w-4 h-4" />
+              <span>Beta pricing — subject to confirmation</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+              Simple, Honest
+              <span className="gradient-text"> Pricing</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              We only do well when your club does. There&apos;s no upfront cost — a small platform
+              fee simply comes off ticket sales, and the large majority of proceeds go straight to
+              your club.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto grid sm:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Free to host',
+                description:
+                  'Create your club, build events and sell tickets with no setup fee and no subscription.',
+              },
+              {
+                title: 'Small platform fee',
+                description:
+                  'A modest fee comes off ticket sales to keep the platform running. During beta it scales with your ticket price — a higher ticket price means a lower fee.',
+              },
+              {
+                title: 'Most goes to your club',
+                description:
+                  'The large majority of every ticket goes to your fundraiser. The exact rate is confirmed with you for each event before it goes live.',
+              },
+            ].map((tier, i) => (
+              <div
+                key={i}
+                className="p-6 bg-night-light border border-night-lighter rounded-2xl text-center"
+              >
+                <h3 className="text-lg font-semibold mb-3 text-gold">{tier.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{tier.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-gray-500 text-sm mt-8 max-w-2xl mx-auto">
+            MyRaceNight is in beta and there is no fixed percentage yet — pricing is confirmed per
+            event and may change as the platform develops. Questions? Email{' '}
+            <a href="mailto:myracenightireland@gmail.com" className="text-gold hover:text-gold-light">
+              myracenightireland@gmail.com
+            </a>
+            .
+          </p>
+        </div>
+
         {/* CTA Section */}
         <div className="mt-32 text-center">
           <div className="inline-block p-12 bg-gradient-to-br from-racing-green/20 to-racing-green/5 border border-racing-green-light/20 rounded-3xl">
