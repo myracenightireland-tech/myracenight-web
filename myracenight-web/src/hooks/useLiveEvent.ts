@@ -74,7 +74,7 @@ export function useLiveEvent({
     const poller: Poller = createPoller(reconcileAll, POLL_INTERVAL_MS);
 
     // --- Socket wiring ---
-    const socket = getSocket();
+    const socket = getSocket({ eventId, userId });
 
     const onConnect = () => {
       if (cancelled) return;

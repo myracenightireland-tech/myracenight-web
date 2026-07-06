@@ -11,16 +11,29 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://myracenight-backend-
 
 let socket: Socket | null = null;
 
-/** Get (lazily creating) the shared socket. Auth token is read fresh each call. */
-export function getSocket(): Socket {
+/**
+ * Get (lazily creating) the shared socket. Auth token is read fresh each call.
+ *
+ * The handshake `query` carries `{ userId, eventId }` so the backend gateway
+ * joins the user + event rooms on the initial connect. This is belt-and-braces
+ * with the `subscribe` emit (see joinRooms) which re-fires on every
+ * connect/reconnect to cover late joins and reconnects.
+ */
+export function getSocket(params?: { eventId?: string; userId?: string }): Socket {
   if (socket) return socket;
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+  const query: { userId?: string; eventId?: string } = {};
+  if (params?.userId) query.userId = params.userId;
+  if (params?.eventId) query.eventId = params.eventId;
 
   socket = io(API_URL, {
     // websocket-first with polling fallback handled by socket.io itself.
     transports: ['websocket', 'polling'],
     auth: token ? { token } : undefined,
+    // Join rooms straight from the handshake query on the initial connect.
+    query,
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
