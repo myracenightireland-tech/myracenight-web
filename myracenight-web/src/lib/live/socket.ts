@@ -34,20 +34,17 @@ export function getSocket(): Socket {
 /**
  * Join the event + user rooms. Emitted on every (re)connect.
  *
- * NOTE: the exact join protocol must match the backend gateway. We emit the
- * common conventions (a single `join` with a payload, plus verb-scoped events)
- * so whichever the gateway listens for is satisfied; unhandled events are
- * harmlessly ignored by Socket.IO.
+ * Matches the backend gateway contract (RealtimeGateway): it listens for a
+ * single `subscribe` message and reads `{ userId?, eventId? }` off the payload,
+ * joining `user:{userId}` / `event:{eventId}` for whichever keys are present.
  */
 export function joinRooms(s: Socket, params: { eventId?: string; userId?: string }): void {
   const { eventId, userId } = params;
-  if (eventId) {
-    s.emit('join', { room: 'event', eventId });
-    s.emit('join-event', eventId);
-  }
-  if (userId) {
-    s.emit('join', { room: 'user', userId });
-    s.emit('join-user', userId);
+  const payload: { userId?: string; eventId?: string } = {};
+  if (userId) payload.userId = userId;
+  if (eventId) payload.eventId = eventId;
+  if (payload.userId || payload.eventId) {
+    s.emit('subscribe', payload);
   }
 }
 
