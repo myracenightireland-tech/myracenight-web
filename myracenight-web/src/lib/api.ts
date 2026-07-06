@@ -854,6 +854,20 @@ class ApiClient {
   }>> {
     return this.request('/users/my-hosted-events');
   }
+
+  async getMyEvents(): Promise<Array<{
+    id: string;
+    name: string;
+    slug: string;
+    eventDate: string;
+    venue: string;
+    status: string;
+    ticketPrice: number;
+    club: { id: string; name: string } | null;
+    userHorsesCount: number;
+  }>> {
+    return this.request('/users/my-events');
+  }
 }
 
 export const api = new ApiClient();
