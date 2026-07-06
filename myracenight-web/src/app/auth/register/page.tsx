@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Check, Phone } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button, Input } from '@/components/ui';
 
@@ -15,6 +15,7 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -29,6 +30,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!formData.phone.trim()) {
+      setError('Phone number is required');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -50,6 +56,7 @@ export default function RegisterPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
       });
       router.push('/dashboard/my-events');
@@ -146,6 +153,17 @@ export default function RegisterPage() {
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
+              required
+            />
+
+            <Input
+              type="tel"
+              name="phone"
+              label="Phone number"
+              placeholder="+353 87 123 4567"
+              value={formData.phone}
+              onChange={handleChange}
+              leftIcon={<Phone className="w-5 h-5" />}
               required
             />
 
