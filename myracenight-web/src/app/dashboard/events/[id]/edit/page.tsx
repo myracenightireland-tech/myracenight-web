@@ -21,6 +21,7 @@ export default function EditEventPage() {
 
   const [formData, setFormData] = useState({
     name: '',
+    clubName: '',
     description: '',
     eventDate: '',
     startTime: '19:00',
@@ -50,6 +51,7 @@ export default function EditEventPage() {
 
         setFormData({
           name: data.name || '',
+          clubName: data.club?.name || '',
           description: data.description || '',
           eventDate: dateStr,
           startTime: timeStr,
@@ -92,6 +94,7 @@ export default function EditEventPage() {
       
       await api.updateEvent(id, {
         name: formData.name,
+        clubName: formData.clubName,
         description: formData.description,
         venue: formData.venue,
         address: formData.address,
@@ -185,6 +188,15 @@ export default function EditEventPage() {
                 label="Event Name"
                 placeholder="Annual Race Night 2024"
                 value={formData.name}
+                onChange={handleChange}
+                required
+              />
+
+              <Input
+                name="clubName"
+                label="Club name"
+                placeholder="St. Patrick's GAA"
+                value={formData.clubName}
                 onChange={handleChange}
                 required
               />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, Ticket, Trophy, Clock } from 'lucide-react';
@@ -8,18 +8,16 @@ import { Header } from '@/components/layout/Header';
 import { Card, Button, Input, TextArea } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Club } from '@/types';
 
 export default function NewEventPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [clubs, setClubs] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    clubId: '',
+    clubName: '',
     name: '',
     fundraisingCause: '',
     eventDate: '',
@@ -33,21 +31,6 @@ export default function NewEventPage() {
     contentFilterMode: 'MODERATE',
     welcomeDrinkIncluded: false,
   });
-
-  useEffect(() => {
-    const loadClubs = async () => {
-      try {
-        const data = await api.getClubs();
-        setClubs(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, clubId: data[0].id }));
-        }
-      } catch (error) {
-        console.error('Failed to load clubs:', error);
-      }
-    };
-    loadClubs();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -137,23 +120,14 @@ export default function NewEventPage() {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-display font-bold mb-6">Basic Information</h2>
 
-              {clubs.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Select Club
-                  </label>
-                  <select
-                    name="clubId"
-                    value={formData.clubId}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-night-lighter border border-night-lighter rounded-lg text-white focus:outline-none focus:border-gold"
-                  >
-                    {clubs.map(club => (
-                      <option key={club.id} value={club.id}>{club.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <Input
+                name="clubName"
+                label="Club name"
+                placeholder="St. Patrick's GAA"
+                value={formData.clubName}
+                onChange={handleChange}
+                required
+              />
 
               <Input
                 name="name"

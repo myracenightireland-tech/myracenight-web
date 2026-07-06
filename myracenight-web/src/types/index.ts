@@ -76,6 +76,7 @@ export type ClubMemberRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 export interface Event {
   id: string;
   clubId: string;
+  clubName?: string;
   organiserId: string;
   name: string;
   slug: string;
