@@ -26,7 +26,7 @@ export default function NewEventPage() {
     address: '',
     ticketPrice: 20,
     maxAttendees: 100,
-    numberOfRaces: 6,
+    numberOfRaces: 8,
     horseDeadline: '',
     contentFilterMode: 'MODERATE',
     welcomeDrinkIncluded: false,
@@ -234,17 +234,6 @@ export default function NewEventPage() {
               </div>
 
               <Input
-                type="number"
-                name="numberOfRaces"
-                label="Number of Races"
-                value={formData.numberOfRaces}
-                onChange={handleChange}
-                min={4}
-                max={12}
-                helperText="Recommended: 6-8 races for a 2-3 hour event"
-              />
-
-              <Input
                 type="datetime-local"
                 name="horseDeadline"
                 label="Horse Submission Deadline"
@@ -263,19 +252,25 @@ export default function NewEventPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Content Filter Mode
                 </label>
-                <select
+                <input
+                  type="range"
                   name="contentFilterMode"
-                  value={formData.contentFilterMode}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-night-lighter border border-night-lighter rounded-lg text-white focus:outline-none focus:border-gold"
-                >
-                  <option value="STRICT">Strict - Family friendly only</option>
-                  <option value="MODERATE">Moderate - Some adult humor allowed</option>
-                  <option value="RELAXED">Relaxed - Adults only event</option>
-                </select>
-                <p className="mt-1 text-sm text-gray-500">
-                  Controls AI moderation of horse backstories
-                </p>
+                  min={0}
+                  max={2}
+                  step={1}
+                  value={['CLEAN', 'MODERATE', 'ADULT'].indexOf(formData.contentFilterMode)}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      contentFilterMode: ['CLEAN', 'MODERATE', 'ADULT'][parseInt(e.target.value, 10)],
+                    }))
+                  }
+                  className="w-full accent-gold cursor-pointer"
+                />
+                <div className="mt-1 flex justify-between text-sm text-gray-400">
+                  <span>Family Friendly</span>
+                  <span>No Boundaries</span>
+                </div>
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer p-4 bg-night-lighter rounded-lg hover:bg-night-lighter/80 transition-colors">

@@ -29,7 +29,7 @@ export default function EditEventPage() {
     address: '',
     ticketPrice: 20,
     maxAttendees: 100,
-    numberOfRaces: 6,
+    numberOfRaces: 8,
     horseDeadline: '',
     contentFilterMode: 'MODERATE',
     welcomeDrinkIncluded: false,
@@ -59,7 +59,7 @@ export default function EditEventPage() {
           address: data.address || '',
           ticketPrice: data.ticketPrice || 20,
           maxAttendees: data.maxAttendees || 100,
-          numberOfRaces: data.numberOfRaces || 6,
+          numberOfRaces: 8,
           horseDeadline: horseDeadlineStr,
           contentFilterMode: data.contentFilterMode || 'MODERATE',
           welcomeDrinkIncluded: data.welcomeDrinkIncluded || false,
@@ -272,7 +272,7 @@ export default function EditEventPage() {
               Tickets & Races
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="number"
                 name="ticketPrice"
@@ -290,17 +290,6 @@ export default function EditEventPage() {
                 label="Max Attendees"
                 min="1"
                 value={formData.maxAttendees}
-                onChange={handleChange}
-                required
-              />
-
-              <Input
-                type="number"
-                name="numberOfRaces"
-                label="Number of Races"
-                min="1"
-                max="12"
-                value={formData.numberOfRaces}
                 onChange={handleChange}
                 required
               />
@@ -330,19 +319,25 @@ export default function EditEventPage() {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Commentary Style
               </label>
-              <select
+              <input
+                type="range"
                 name="contentFilterMode"
-                value={formData.contentFilterMode}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-night-lighter border border-night-lighter rounded-lg text-white focus:outline-none focus:border-gold"
-              >
-                <option value="CLEAN">Family Friendly</option>
-                <option value="MODERATE">Moderate (light banter)</option>
-                <option value="ADULT">Adult (roast mode! 🔥)</option>
-              </select>
-              <p className="mt-1 text-sm text-gray-500">
-                This controls how spicy the AI commentary will be
-              </p>
+                min={0}
+                max={2}
+                step={1}
+                value={['CLEAN', 'MODERATE', 'ADULT'].indexOf(formData.contentFilterMode)}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    contentFilterMode: ['CLEAN', 'MODERATE', 'ADULT'][parseInt(e.target.value, 10)],
+                  }))
+                }
+                className="w-full accent-gold cursor-pointer"
+              />
+              <div className="mt-1 flex justify-between text-sm text-gray-400">
+                <span>Family Friendly</span>
+                <span>No Boundaries</span>
+              </div>
             </div>
           </Card>
 
