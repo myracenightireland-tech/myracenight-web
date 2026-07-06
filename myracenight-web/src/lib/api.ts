@@ -523,11 +523,45 @@ class ApiClient {
   }
 
   // Bet endpoints
-  async placeBet(data: { raceId: string; horseId: string; amount: number }): Promise<Bet> {
+  async placeBet(data: {
+    raceId: string;
+    horseId: string;
+    amount: number;
+    eventId?: string;
+    betType?: string;
+  }): Promise<Bet> {
     return this.request<Bet>('/bets', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // Stage 5: preview a bet's return BEFORE placing it.
+  async getBetPreview(params: {
+    raceId: string;
+    horseId: string;
+    betType: string;
+    stake: number;
+  }): Promise<{ stake: number; odds: number; potentialReturn: number; potentialProfit: number }> {
+    const qs = new URLSearchParams({
+      raceId: params.raceId,
+      horseId: params.horseId,
+      betType: params.betType,
+      stake: String(params.stake),
+    });
+    return this.request(`/bets/preview?${qs.toString()}`);
+  }
+
+  // Stage 5: ranked live leaderboard for an event.
+  async getEventLeaderboard(
+    eventId: string,
+    opts?: { limit?: number; offset?: number }
+  ): Promise<Array<{ userId: string; name: string; balance: number; rank?: number }>> {
+    const qs = new URLSearchParams();
+    if (opts?.limit != null) qs.set('limit', String(opts.limit));
+    if (opts?.offset != null) qs.set('offset', String(opts.offset));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request(`/events/${eventId}/leaderboard${suffix}`);
   }
 
   async getUserBets(userId: string): Promise<Bet[]> {

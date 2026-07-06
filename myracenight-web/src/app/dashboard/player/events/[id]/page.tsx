@@ -1,14 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Ticket, Calendar, MapPin, Trophy, Coins, Plus, ChevronRight, Lock, Clock, Play, CheckCircle, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Ticket, Calendar, MapPin, Trophy, Plus, ChevronRight, Lock, Clock, Play, CheckCircle, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, Button, Spinner, Badge } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { Event, Race, Horse, Ticket as TicketType, Bet } from '@/types';
-import BettingModal from '@/components/BettingModal';
+import { useLiveEvent } from '@/hooks/useLiveEvent';
+import { useLiveStore } from '@/store/liveStore';
+import LiveWalletWidget from '@/components/live/LiveWalletWidget';
+import LiveLeaderboard from '@/components/live/LiveLeaderboard';
+import RaceBetSlip from '@/components/live/RaceBetSlip';
 
 export default function PlayerEventPage() {
   const params = useParams();
@@ -25,8 +29,30 @@ export default function PlayerEventPage() {
   const [myBets, setMyBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedRace, setSelectedRace] = useState<Race | null>(null);
-  const [showBettingModal, setShowBettingModal] = useState(false);
+
+  // Live wallet balance (falls back to the last REST-loaded credits value).
+  const liveBalance = useLiveStore((s) => s.balance);
+  const settlingBets = useLiveStore((s) => s.settlingBets);
+  const walletBalance = liveBalance ?? credits;
+
+  // Keep a ref to the latest bets so the realtime hook can resolve which bets
+  // are still pending when a race completes (to show the "settling…" state).
+  const myBetsRef = useRef<Bet[]>([]);
+  myBetsRef.current = myBets;
+  const resolvePendingBetIds = useCallback(
+    (raceId: string) =>
+      myBetsRef.current.filter((b) => b.raceId === raceId && b.status === 'PENDING').map((b) => b.id),
+    []
+  );
+
+  // REALTIME: single shared socket joining event + user rooms, REST
+  // reconciliation on (re)connect, and REST polling fallback if the socket is down.
+  useLiveEvent({
+    eventId,
+    userId: user?.id,
+    initialBalance: credits,
+    resolvePendingBetIds,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) { router.push('/auth/login'); return; }
@@ -55,7 +81,7 @@ export default function PlayerEventPage() {
     finally { setIsLoading(false); }
   };
 
-  const handleBetPlaced = () => { setShowBettingModal(false); loadEventData(); };
+  const handleBetPlaced = () => { loadEventData(); };
 
   const getRaceStatusBadge = (race: Race) => {
     switch (race.status) {
@@ -124,15 +150,16 @@ export default function PlayerEventPage() {
             {event.status === 'LIVE' && <Badge className="bg-red-500 text-lg px-4 py-2">LIVE</Badge>}
           </div>
 
-          <Card className="bg-gradient-to-r from-gold/20 to-gold/5 border-gold/30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gold/20 rounded-full flex items-center justify-center"><Coins className="w-7 h-7 text-gold" /></div>
-                <div><p className="text-gray-400 text-sm">Your Credits</p><p className="text-3xl font-bold text-gold">{credits.toLocaleString()}</p></div>
-              </div>
-              <div className="text-right"><p className="text-gray-400 text-sm">Ticket Status</p><p className="text-green-400 font-semibold capitalize">{ticket.status?.toLowerCase()}</p></div>
-            </div>
-          </Card>
+          {/* LIVE WALLET — updates instantly on wallet:update, shows "settling…" during async settlement */}
+          <LiveWalletWidget />
+          <p className="text-gray-500 text-sm mt-2 text-right">
+            Ticket Status: <span className="text-green-400 font-semibold capitalize">{ticket.status?.toLowerCase()}</span>
+          </p>
+        </div>
+
+        {/* LIVE LEADERBOARD — ranked standings that reorder on leaderboard:update */}
+        <div className="mb-8">
+          <LiveLeaderboard currentUserId={user?.id} />
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -198,7 +225,6 @@ export default function PlayerEventPage() {
                         <div className="flex items-center gap-3 mb-1"><h3 className="text-lg font-semibold text-white">Race {race.raceNumber}: {race.name || `Race ${race.raceNumber}`}</h3>{getRaceStatusBadge(race)}</div>
                         {race.sponsorName && <p className="text-gray-400 text-sm">Sponsored by {race.sponsorName}</p>}
                       </div>
-                      {canBetOnRace(race) && !myBetOnRace && <Button onClick={() => { setSelectedRace(race); setShowBettingModal(true); }} className="bg-green-500 hover:bg-green-600">Place Bet</Button>}
                       {myBetOnRace && <div className="text-right"><p className="text-sm text-gray-400">Your Bet</p><p className="text-gold font-bold">{myBetOnRace.amount} credits</p></div>}
                     </div>
                     {raceHorses.length > 0 && (
@@ -213,6 +239,16 @@ export default function PlayerEventPage() {
                           ))}
                         </div>
                       </div>
+                    )}
+                    {/* BET SLIP — preview "you'd win €X" before placing, then place the bet */}
+                    {canBetOnRace(race) && (
+                      <RaceBetSlip
+                        raceId={race.id}
+                        eventId={eventId}
+                        horses={raceHorses.map((h, idx) => ({ id: h.id, name: h.name || h.horseName, odds: h.odds, position: h.position || idx + 1 }))}
+                        balance={walletBalance}
+                        onBetPlaced={handleBetPlaced}
+                      />
                     )}
                     {race.status === 'COMPLETED' && race.winningPosition && (
                       <div className="border-t border-gray-700 pt-4 mt-4">
@@ -235,7 +271,7 @@ export default function PlayerEventPage() {
                 {myBets.map((bet) => (
                   <div key={bet.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
                     <div><p className="text-white">Race {races.find(r => r.id === bet.raceId)?.raceNumber || '?'}</p><p className="text-gray-400 text-sm">{horses.find(h => h.id === bet.horseId)?.name || 'Horse'} @ {bet.odds}</p></div>
-                    <div className="text-right"><p className="text-gold font-bold">{bet.amount} credits</p><Badge className={bet.status === 'WON' ? 'bg-green-500' : bet.status === 'LOST' ? 'bg-red-500' : bet.status === 'PENDING' ? 'bg-yellow-500' : 'bg-gray-500'}>{bet.status}</Badge></div>
+                    <div className="text-right"><p className="text-gold font-bold">{bet.amount} credits</p>{settlingBets.includes(bet.id) ? <Badge className="bg-yellow-500 animate-pulse">Settling…</Badge> : <Badge className={bet.status === 'WON' ? 'bg-green-500' : bet.status === 'LOST' ? 'bg-red-500' : bet.status === 'PENDING' ? 'bg-yellow-500' : 'bg-gray-500'}>{bet.status}</Badge>}</div>
                   </div>
                 ))}
               </div>
@@ -243,10 +279,6 @@ export default function PlayerEventPage() {
           </div>
         )}
       </div>
-
-      {showBettingModal && selectedRace && (
-        <BettingModal isOpen={showBettingModal} race={selectedRace} eventId={eventId} horses={horses.filter(h => h.raceId === selectedRace.id || h.raceNumber === selectedRace.raceNumber)} balance={credits} onClose={() => setShowBettingModal(false)} onBetPlaced={handleBetPlaced} />
-      )}
     </div>
   );
 }
