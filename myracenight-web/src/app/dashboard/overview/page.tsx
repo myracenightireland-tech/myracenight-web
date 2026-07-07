@@ -12,6 +12,7 @@ import {
 import { Card, Button, Badge, Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useCurrentEvent } from '@/lib/eventContext';
+import { eventSlotSummary } from '@/lib/raceSlots';
 
 export default function OverviewPage() {
   const { currentEvent, isLoading, refreshEvent } = useCurrentEvent();
@@ -19,6 +20,7 @@ export default function OverviewPage() {
   const [ticketCount, setTicketCount] = useState(0);
   const [horseCount, setHorseCount] = useState(0);
   const [raceCount, setRaceCount] = useState(0);
+  const [slotsNeeded, setSlotsNeeded] = useState(0);
   const [commentaryReady, setCommentaryReady] = useState(0);
 
   useEffect(() => {
@@ -37,6 +39,8 @@ export default function OverviewPage() {
         // Load races
         const races = await api.getEventRaces(currentEvent.id);
         setRaceCount(races?.length || 0);
+        // Horses needed = sum of each race's metadata-synced required count
+        setSlotsNeeded(races?.length ? eventSlotSummary(races, []).required : 0);
         
         // Check commentary status
         let readyCount = 0;
@@ -109,7 +113,9 @@ export default function OverviewPage() {
   const isToday = daysUntil === 0;
 
   // Calculate progress
-  const horsesNeeded = (currentEvent.numberOfRaces || 6) * (currentEvent.horsesPerRace || 8);
+  // Prefer the metadata-driven per-race counts; fall back to the event-level
+  // fields only while races haven't loaded yet.
+  const horsesNeeded = slotsNeeded || (currentEvent.numberOfRaces || 8) * (currentEvent.horsesPerRace || 8);
   const horseProgress = Math.min(100, Math.round((horseCount / horsesNeeded) * 100));
   const attendeeProgress = Math.min(100, Math.round((ticketCount / (currentEvent.maxAttendees || 100)) * 100));
   const commentaryProgress = raceCount > 0 ? Math.round((commentaryReady / raceCount) * 100) : 0;

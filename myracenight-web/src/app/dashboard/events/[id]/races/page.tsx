@@ -11,6 +11,7 @@ import {
 import { Header } from '@/components/layout/Header';
 import { Card, Button, Input, TextArea, Badge, Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
+import { requiredForRace, assignedCountForRace } from '@/lib/raceSlots';
 import { Event, Race, Horse } from '@/types';
 
 export default function RaceManagementPage() {
@@ -172,8 +173,8 @@ export default function RaceManagementPage() {
 
   // Get detailed race status based on actual race.status from database
   const getRaceDisplayStatus = (race: Race) => {
-    const expectedHorses = race.requiredHorseCount || 8;
-    const assignedHorses = horses?.filter(h => h.raceId === race.id).length || 0;
+    const expectedHorses = requiredForRace(race);
+    const assignedHorses = assignedCountForRace(race, horses || []);
 
     // Use the actual race.status from the database
     switch (race.status) {

@@ -13,6 +13,7 @@ import { useLiveStore } from '@/store/liveStore';
 import LiveWalletWidget from '@/components/live/LiveWalletWidget';
 import LiveLeaderboard from '@/components/live/LiveLeaderboard';
 import RaceBetSlip from '@/components/live/RaceBetSlip';
+import RacePlayer from '@/components/race/RacePlayer';
 
 export default function PlayerEventPage() {
   const params = useParams();
@@ -29,6 +30,8 @@ export default function PlayerEventPage() {
   const [myBets, setMyBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [watchingRace, setWatchingRace] = useState<Race | null>(null);
+  const [topUpInfo, setTopUpInfo] = useState<{ available: boolean; hasUsed: boolean; topUpAmount: number; topUpPrice: number } | null>(null);
 
   // Live wallet balance (falls back to the last REST-loaded credits value).
   const liveBalance = useLiveStore((s) => s.balance);
@@ -75,13 +78,26 @@ export default function PlayerEventPage() {
         setHorses(horsesData);
         setMyHorses(horsesData.filter((h: Horse) => h.userId === user?.id));
       } catch (err) { console.log('Horses not available yet'); }
+      try { await api.initializeCredits(eventId); } catch (err) { console.log('Credits already initialized'); }
       try { const creditsData = await api.getMyBalance(eventId); setCredits(creditsData.balance || myTicket.startingCredits || 0); } catch (err) { setCredits(myTicket.startingCredits || 0); }
+      try { setTopUpInfo(await api.getTopUpInfo(eventId)); } catch (err) { console.log('Top-up not available'); }
       try { const betsData = await api.getMyBets(eventId); setMyBets(betsData); } catch (err) { console.log('No bets yet'); }
     } catch (err: any) { setError(err.message || 'Failed to load event'); }
     finally { setIsLoading(false); }
   };
 
   const handleBetPlaced = () => { loadEventData(); };
+
+  const handleTopUp = async () => {
+    if (!topUpInfo?.available) return;
+    const confirmed = confirm(`Top up ${topUpInfo.topUpAmount.toLocaleString()} credits for €${topUpInfo.topUpPrice.toFixed(2)}?\n\nThis is a one-time offer per event.`);
+    if (!confirmed) return;
+    try {
+      const result = await api.processTopUp(eventId);
+      if (result.success) { alert(result.message || 'Top-up successful!'); loadEventData(); }
+      else { alert(result.message || 'Failed to process top-up'); }
+    } catch (err: any) { alert(err.message || 'Failed to process top-up. Please try again.'); }
+  };
 
   const getRaceStatusBadge = (race: Race) => {
     switch (race.status) {
@@ -137,6 +153,25 @@ export default function PlayerEventPage() {
         </div>
       </div>
 
+      {watchingRace && (
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="w-full max-w-4xl h-full sm:h-auto flex flex-col">
+            <div className="flex justify-between items-center mb-2 sm:mb-4 p-2">
+              <h2 className="text-lg sm:text-xl font-bold">{watchingRace.name}</h2>
+              <button
+                onClick={() => setWatchingRace(null)}
+                className="p-3 hover:bg-white/10 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <RacePlayer race={watchingRace} onFinish={() => setWatchingRace(null)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
@@ -152,6 +187,16 @@ export default function PlayerEventPage() {
 
           {/* LIVE WALLET — updates instantly on wallet:update, shows "settling…" during async settlement */}
           <LiveWalletWidget />
+          {topUpInfo?.available && (
+            <div className="mt-2 text-right">
+              <Button size="sm" variant="secondary" onClick={handleTopUp} leftIcon={<Plus className="w-4 h-4" />}>
+                Top up {topUpInfo.topUpAmount.toLocaleString()} credits — €{topUpInfo.topUpPrice.toFixed(2)}
+              </Button>
+            </div>
+          )}
+          {topUpInfo?.hasUsed && (
+            <p className="text-gray-500 text-xs mt-2 text-right">✓ Top-up already used</p>
+          )}
           <p className="text-gray-500 text-sm mt-2 text-right">
             Ticket Status: <span className="text-green-400 font-semibold capitalize">{ticket.status?.toLowerCase()}</span>
           </p>
@@ -249,6 +294,13 @@ export default function PlayerEventPage() {
                         balance={walletBalance}
                         onBetPlaced={handleBetPlaced}
                       />
+                    )}
+                    {(race.status === 'IN_PROGRESS' || race.status === 'COMPLETED') && (
+                      <div className="mt-4">
+                        <Button size="sm" variant="secondary" onClick={() => setWatchingRace(race)} leftIcon={<Play className="w-4 h-4" />}>
+                          Watch Race
+                        </Button>
+                      </div>
                     )}
                     {race.status === 'COMPLETED' && race.winningPosition && (
                       <div className="border-t border-gray-700 pt-4 mt-4">

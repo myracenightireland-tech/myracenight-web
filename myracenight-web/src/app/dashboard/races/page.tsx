@@ -14,6 +14,7 @@ import { RaceCardDisplay } from '@/components/race/RaceCardDisplay';
 import { api } from '@/lib/api';
 import { useCurrentEvent } from '@/lib/eventContext';
 import { Race, Horse as HorseType } from '@/types';
+import { eventSlotSummary, isRaceFull } from '@/lib/raceSlots';
 
 interface RaceInfoForModal {
   raceId: string;
@@ -485,12 +486,13 @@ export default function RacesSponsorsPage() {
     setExpandedRace(expandedRace === raceId ? null : raceId);
   };
 
-  // Calculate stats
+  // Calculate stats - slot fill comes from the shared metadata-driven helper
+  // so this page, the host screen and the backend status all agree.
   const approvedHorses = horses.filter(h => h.approvalStatus === 'APPROVED');
-  const assignedCount = approvedHorses.filter(h => h.raceId).length;
   const unassignedHorses = approvedHorses.filter(h => !h.raceId);
-  // Sum up all races' required horse counts (varies per race based on video metadata)
-  const totalSlotsNeeded = races.reduce((sum, race) => sum + (race.requiredHorseCount || 8), 0);
+  const slotSummary = eventSlotSummary(races, horses);
+  const assignedCount = slotSummary.assigned;
+  const totalSlotsNeeded = slotSummary.required;
   const sponsoredRaces = races.filter(r => r.sponsorName).length;
 
   if (eventLoading || isLoading) {
@@ -562,11 +564,7 @@ export default function RacesSponsorsPage() {
               <Button
                 variant="secondary"
                 onClick={handleAutofillAllRaces}
-                disabled={races.length === 0 || autofillingAll || races.every(race => {
-                  const required = race.requiredHorseCount || 8;
-                  const assigned = horses.filter(h => h.raceId === race.id).length;
-                  return assigned >= required;
-                })}
+                disabled={races.length === 0 || autofillingAll || slotSummary.allFull}
                 isLoading={autofillingAll}
                 leftIcon={<Plus className="w-4 h-4" />}
                 className="text-sm"
@@ -664,7 +662,7 @@ export default function RacesSponsorsPage() {
                       {race.sponsorName && (
                         <Badge variant="success">Sponsored</Badge>
                       )}
-                      {horsesInRace.length === (race.requiredHorseCount || 8) && (
+                      {isRaceFull(race, horses) && (
                         <Badge variant="success">Full</Badge>
                       )}
                       {/* Race Status Badge - Based on actual status */}

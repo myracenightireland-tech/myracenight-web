@@ -236,7 +236,7 @@ export default function MyEventsPage() {
               {attendingEvents.map((event) => (
                 <Link
                   key={event.id}
-                  href={`/events/${event.slug}/my-dashboard`}
+                  href={`/dashboard/player/events/${event.id}`}
                   className="block"
                 >
                   <Card hover className="transition-all hover:border-racing-green-light/30">

@@ -35,8 +35,6 @@ export default function EventDetailsPage() {
     venueAddress: '',
     ticketPrice: '',
     maxAttendees: '',
-    numberOfRaces: '',
-    horsesPerRace: '',
     maxHorsesPerPerson: '',
     horseDeadline: '',
     contentFilterMode: 'CLEAN',
@@ -53,8 +51,6 @@ export default function EventDetailsPage() {
         venueAddress: currentEvent.venueAddress || '',
         ticketPrice: currentEvent.ticketPrice?.toString() || '',
         maxAttendees: currentEvent.maxAttendees?.toString() || '',
-        numberOfRaces: currentEvent.numberOfRaces?.toString() || '',
-        horsesPerRace: currentEvent.horsesPerRace?.toString() || '',
         maxHorsesPerPerson: currentEvent.maxHorsesPerPerson?.toString() || '',
         horseDeadline: currentEvent.horseDeadline ? new Date(currentEvent.horseDeadline).toISOString().slice(0, 16) : '',
         contentFilterMode: currentEvent.contentFilterMode || 'CLEAN',
@@ -148,8 +144,6 @@ export default function EventDetailsPage() {
         venueAddress: form.venueAddress,
         ticketPrice: parseFloat(form.ticketPrice),
         maxAttendees: parseInt(form.maxAttendees),
-        numberOfRaces: parseInt(form.numberOfRaces),
-        horsesPerRace: parseInt(form.horsesPerRace),
         maxHorsesPerPerson: parseInt(form.maxHorsesPerPerson),
         horseDeadline: form.horseDeadline ? new Date(form.horseDeadline).toISOString() : undefined,
         contentFilterMode: form.contentFilterMode,
@@ -429,40 +423,10 @@ export default function EventDetailsPage() {
             <Card>
               <h2 className="text-lg font-semibold mb-6">Races & Horses</h2>
 
+              <p className="text-sm text-gray-500 mb-4">
+                Races and horses per race come from the official race card metadata.
+              </p>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Number of Races
-                  </label>
-                  <input
-                    type="number"
-                    value={form.numberOfRaces}
-                    onChange={(e) => setForm({ ...form, numberOfRaces: e.target.value })}
-                    disabled={currentEvent.status !== 'DRAFT'}
-                    min="1"
-                    max="12"
-                    className="w-full px-4 py-3 bg-night-light border border-night-lighter rounded-lg text-white focus:outline-none focus:border-gold disabled:opacity-50"
-                  />
-                  {currentEvent.status !== 'DRAFT' && (
-                    <p className="text-xs text-gray-500 mt-1">Cannot change after races are created</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Horses per Race
-                  </label>
-                  <input
-                    type="number"
-                    value={form.horsesPerRace}
-                    onChange={(e) => setForm({ ...form, horsesPerRace: e.target.value })}
-                    disabled={currentEvent.status !== 'DRAFT'}
-                    min="4"
-                    max="12"
-                    className="w-full px-4 py-3 bg-night-light border border-night-lighter rounded-lg text-white focus:outline-none focus:border-gold disabled:opacity-50"
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Max Horses per Person

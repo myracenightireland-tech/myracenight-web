@@ -117,7 +117,7 @@ export default function PlayerDashboard() {
                   <p className="text-gray-300">{liveEvents[0].name} is happening right now</p>
                 </div>
               </div>
-              <Link href={`/events/${liveEvents[0].slug}/my-dashboard`}>
+              <Link href={`/dashboard/player/events/${liveEvents[0].id}`}>
                 <Button leftIcon={<ChevronRight className="w-5 h-5" />}>
                   Join Now
                 </Button>
@@ -247,7 +247,7 @@ function EventCard({ event, isPast = false }: { event: PlayerEvent; isPast?: boo
             </div>
           )}
           
-          <Link href={`/events/${event.slug}/my-dashboard`}>
+          <Link href={`/dashboard/player/events/${event.id}`}>
             <Button variant={isPast ? 'ghost' : 'primary'} rightIcon={<ChevronRight className="w-5 h-5" />}>
               {isPast ? 'View Results' : 'Open Dashboard'}
             </Button>

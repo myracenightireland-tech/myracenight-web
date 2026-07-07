@@ -171,7 +171,7 @@ export default function SubmitHorsePage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href={`/events/${slug}/my-dashboard`}>
+              <Link href={event ? `/dashboard/player/events/${event.id}` : `/events/${slug}/my-dashboard`}>
                 <Button>Go to My Dashboard</Button>
               </Link>
               <Link href={`/events/${slug}`}>
