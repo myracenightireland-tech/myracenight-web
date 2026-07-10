@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { planAudioSeek } from '@/lib/audioVideoSync';
 
 interface RacePlayerProps {
   race: any;
@@ -58,18 +59,24 @@ export default function RacePlayer({ race, onFinish, isTestMode = false }: RaceP
     };
 
     const handleTimeUpdate = () => {
-      // Keep commentary audio in sync with video
+      // Keep both audio tracks following the video clock. planAudioSeek
+      // handles drift AND stops us seeking past the end of a track that is
+      // shorter than the video (legacy pre-timed commentary), which used to
+      // thrash the audio element on every timeupdate.
       if (audio && hasCommentary) {
-        const timeDiff = Math.abs(video.currentTime - audio.currentTime);
-        if (timeDiff > 0.3) {
-          audio.currentTime = video.currentTime;
+        const target = planAudioSeek(video.currentTime, audio.currentTime, audio.duration);
+        if (target !== null) {
+          audio.currentTime = target;
         }
       }
-      // Keep background audio in sync with video
       if (backgroundAudio && hasBackgroundAudio) {
-        const timeDiff = Math.abs(video.currentTime - backgroundAudio.currentTime);
-        if (timeDiff > 0.3) {
-          backgroundAudio.currentTime = video.currentTime;
+        const target = planAudioSeek(
+          video.currentTime,
+          backgroundAudio.currentTime,
+          backgroundAudio.duration,
+        );
+        if (target !== null) {
+          backgroundAudio.currentTime = target;
         }
       }
     };
