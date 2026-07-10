@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Ticket, Calendar, MapPin, Trophy, Plus, ChevronRight, Lock, Clock, Play, CheckCircle, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Trophy, Plus, ChevronRight, Lock, Clock, Play, CheckCircle, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, Button, Spinner, Badge } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -14,6 +14,8 @@ import LiveWalletWidget from '@/components/live/LiveWalletWidget';
 import LiveLeaderboard from '@/components/live/LiveLeaderboard';
 import RaceBetSlip from '@/components/live/RaceBetSlip';
 import RacePlayer from '@/components/race/RacePlayer';
+import RaceResultsPanel from '@/components/results/RaceResultsPanel';
+import BetSlipHistory from '@/components/bets/BetSlipHistory';
 
 export default function PlayerEventPage() {
   const params = useParams();
@@ -31,11 +33,11 @@ export default function PlayerEventPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [watchingRace, setWatchingRace] = useState<Race | null>(null);
+  const [activeTab, setActiveTab] = useState<'races' | 'results' | 'mybets'>('races');
   const [topUpInfo, setTopUpInfo] = useState<{ available: boolean; hasUsed: boolean; topUpAmount: number; topUpPrice: number } | null>(null);
 
   // Live wallet balance (falls back to the last REST-loaded credits value).
   const liveBalance = useLiveStore((s) => s.balance);
-  const settlingBets = useLiveStore((s) => s.settlingBets);
   const walletBalance = liveBalance ?? credits;
 
   // Keep a ref to the latest bets so the realtime hook can resolve which bets
@@ -233,7 +235,40 @@ export default function PlayerEventPage() {
           </Card>
         </div>
 
-        <div className="mb-8">
+        {/* Tabs: live racecard / results / bet history */}
+        <div className="flex gap-2 mb-6 border-b border-gray-800">
+          {([
+            ['races', 'Races'],
+            ['results', 'Results'],
+            ['mybets', 'My Bets'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition ${
+                activeTab === key
+                  ? 'bg-gold text-night'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'results' && (
+          <div className="mb-8">
+            <RaceResultsPanel eventId={eventId} />
+          </div>
+        )}
+
+        {activeTab === 'mybets' && (
+          <div className="mb-8">
+            <BetSlipHistory eventId={eventId} scope="mine" emptyText="You haven't placed any bets in this event yet" />
+          </div>
+        )}
+
+        <div className={activeTab === 'races' ? 'mb-8' : 'hidden'}>
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5 text-gold" />My Horses ({myHorses.length})</h2>
           {myHorses.length === 0 ? (
             <Card className="text-center py-8">
@@ -252,7 +287,7 @@ export default function PlayerEventPage() {
           )}
         </div>
 
-        <div className="mb-8">
+        <div className={activeTab === 'races' ? 'mb-8' : 'hidden'}>
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2"><Trophy className="w-5 h-5 text-gold" />Races</h2>
           {!racecardPublished ? (
             <Card className="text-center py-8"><Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" /><h3 className="text-lg font-semibold text-white mb-2">Racecard Coming Soon</h3><p className="text-gray-400">The host is preparing the racecard. Check back soon!</p></Card>
@@ -315,21 +350,6 @@ export default function PlayerEventPage() {
           )}
         </div>
 
-        {myBets.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2"><Ticket className="w-5 h-5 text-gold" />My Bets ({myBets.length})</h2>
-            <Card>
-              <div className="space-y-3">
-                {myBets.map((bet) => (
-                  <div key={bet.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
-                    <div><p className="text-white">Race {races.find(r => r.id === bet.raceId)?.raceNumber || '?'}</p><p className="text-gray-400 text-sm">{horses.find(h => h.id === bet.horseId)?.name || 'Horse'} @ {bet.odds}</p></div>
-                    <div className="text-right"><p className="text-gold font-bold">{bet.amount} credits</p>{settlingBets.includes(bet.id) ? <Badge className="bg-yellow-500 animate-pulse">Settling…</Badge> : <Badge className={bet.status === 'WON' ? 'bg-green-500' : bet.status === 'LOST' ? 'bg-red-500' : bet.status === 'PENDING' ? 'bg-yellow-500' : 'bg-gray-500'}>{bet.status}</Badge>}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );

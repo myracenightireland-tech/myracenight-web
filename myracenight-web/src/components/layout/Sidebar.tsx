@@ -38,6 +38,7 @@ const navigation = [
   // Race Night section
   { name: 'Host Mode', href: '/dashboard/host', icon: Gamepad2, section: 'RACE NIGHT' },
   { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy, section: 'RACE NIGHT' },
+  { name: 'Bets', href: '/dashboard/my-bets', icon: Receipt, section: 'RACE NIGHT' },
   
   // After section
   { name: 'Summary', href: '/dashboard/summary', icon: Receipt, section: 'AFTER' },

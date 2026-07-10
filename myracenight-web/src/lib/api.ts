@@ -1,4 +1,4 @@
-import { AuthResponse, LoginCredentials, RegisterData, User, Club, Event, Horse, Race, Ticket, Bet } from '@/types';
+import { AuthResponse, LoginCredentials, RegisterData, User, Club, Event, Horse, Race, Ticket, Bet, RaceResultView, BetSlipView } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://myracenight-backend-production.up.railway.app';
 
@@ -570,6 +570,22 @@ class ApiClient {
 
   async getMyBets(eventId: string): Promise<Bet[]> {
     return this.request<Bet[]>(`/bets/my-bets?eventId=${eventId}`);
+  }
+
+  // Race results per race for an event: finishing order, winner, DNF -
+  // read from the settled RaceResult records (the authority).
+  async getEventResults(eventId: string): Promise<RaceResultView[]> {
+    return this.request<RaceResultView[]>(`/races/event/${eventId}/results`);
+  }
+
+  // Current user's bet slips for an event, enriched with settled outcomes.
+  async getMyBetSlips(eventId: string): Promise<BetSlipView[]> {
+    return this.request<BetSlipView[]>(`/bets/my-slips/${eventId}`);
+  }
+
+  // Host oversight: every attendee's bet slips for an event (read-only).
+  async getEventBetSlips(eventId: string): Promise<BetSlipView[]> {
+    return this.request<BetSlipView[]>(`/bets/event/${eventId}/slips`);
   }
 
   async getRaceBets(raceId: string): Promise<Bet[]> {

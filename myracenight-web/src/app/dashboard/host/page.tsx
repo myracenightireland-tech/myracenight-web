@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation';
 import {
   Play, Pause, Flag, Trophy, Phone, BarChart3, QrCode,
   ChevronLeft, ChevronRight, Volume2, VolumeX, AlertCircle,
-  Users, Clock, X, CheckCircle, Settings, RotateCcw, Sparkles
+  Users, Clock, X, CheckCircle, Settings, RotateCcw, Sparkles,
+  ListOrdered, Ticket
 } from 'lucide-react';
 import { Card, Button, Badge, Spinner } from '@/components/ui';
 import RacePlayer from '@/components/race/RacePlayer';
 import { api } from '@/lib/api';
+import RaceResultsPanel from '@/components/results/RaceResultsPanel';
+import BetSlipHistory from '@/components/bets/BetSlipHistory';
 import { useAuth } from '@/lib/auth';
 import { useCurrentEvent } from '@/lib/eventContext';
 import { Race, Horse, RaceStatus } from '@/types';
@@ -27,6 +30,8 @@ export default function HostModePage() {
   const [error, setError] = useState('');
   const [bettingTimer, setBettingTimer] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [showAllBets, setShowAllBets] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [isTestMode, setIsTestMode] = useState(false);
@@ -501,6 +506,20 @@ export default function HostModePage() {
               title="Leaderboard"
             >
               <BarChart3 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowResults(true)}
+              className="p-3 bg-night-lighter rounded-lg hover:bg-night-lighter/80 transition-colors"
+              title="Race Results"
+            >
+              <ListOrdered className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowAllBets(true)}
+              className="p-3 bg-night-lighter rounded-lg hover:bg-night-lighter/80 transition-colors"
+              title="All Bet Slips"
+            >
+              <Ticket className="w-5 h-5" />
             </button>
             <button
               onClick={() => setAudioEnabled(!audioEnabled)}
@@ -978,6 +997,50 @@ export default function HostModePage() {
           </Card>
         )}
       </div>
+
+      {/* Race Results Modal (same data the attendee results tab shows) */}
+      {showResults && currentEvent && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-night-light rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-night-lighter flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <ListOrdered className="w-6 h-6 text-gold" /> Race Results
+              </h2>
+              <button
+                onClick={() => setShowResults(false)}
+                className="p-2 hover:bg-white/10 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <RaceResultsPanel eventId={currentEvent.id} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Bet Slips Modal (host oversight - every attendee, read-only) */}
+      {showAllBets && currentEvent && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-night-light rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-night-lighter flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Ticket className="w-6 h-6 text-gold" /> All Bet Slips
+              </h2>
+              <button
+                onClick={() => setShowAllBets(false)}
+                className="p-2 hover:bg-white/10 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <BetSlipHistory eventId={currentEvent.id} scope="event" emptyText="No bets placed by attendees yet" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Leaderboard Modal */}
       {showLeaderboard && (
