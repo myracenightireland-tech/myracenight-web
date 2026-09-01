@@ -219,7 +219,7 @@ export default function PublicEventPage() {
                   <div>
                     <h3 className="font-semibold mb-1 text-sm sm:text-base">1. Get Your Ticket</h3>
                     <p className="text-gray-400 text-xs sm:text-sm">
-                      Purchase your ticket for €{event.ticketPrice} and receive {(event.ticketPrice * 1000).toLocaleString()} betting credits.
+                      Purchase your ticket for €{event.ticketPrice} and receive 50,000 betting credits.
                     </p>
                   </div>
                 </div>
@@ -268,7 +268,7 @@ export default function PublicEventPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <ChevronRight className="w-5 h-5 text-gold" />
-                  <span className="text-sm sm:text-base">{(event.ticketPrice * 1000).toLocaleString()} betting credits</span>
+                  <span className="text-sm sm:text-base">50,000 betting credits</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <ChevronRight className="w-5 h-5 text-gold" />
