@@ -597,10 +597,10 @@ class ApiClient {
     return this.request<{ userId: string; eventId: string; balance: number }>(`/credits/my-balance/${eventId}`);
   }
 
-  async initializeCredits(eventId: string, amount?: number): Promise<{ balance: number; initialized: boolean }> {
+  async initializeCredits(eventId: string): Promise<{ balance: number; initialized: boolean }> {
     return this.request<{ balance: number; initialized: boolean }>('/credits/initialize', {
       method: 'POST',
-      body: JSON.stringify({ eventId, amount }),
+      body: JSON.stringify({ eventId }),
     });
   }
 
