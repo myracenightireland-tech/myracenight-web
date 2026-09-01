@@ -142,8 +142,8 @@ export default function AdminTestPage() {
   };
 
   const handleResetUserCredits = (userId: string, userName: string) => {
-    if (!confirm(`Reset ${userName}'s credits to 50,000?`)) return;
-    handleAction(`reset-user-${userId}`, `reset-user-credits/${currentEvent?.id}/${userId}`, { startingAmount: 50000 });
+    if (!confirm(`Reset ${userName}'s credits to the event's starting amount?`)) return;
+    handleAction(`reset-user-${userId}`, `reset-user-credits/${currentEvent?.id}/${userId}`);
   };
 
   // Option 2: Event-Level Actions
@@ -153,14 +153,13 @@ export default function AdminTestPage() {
   };
 
   const handleResetAllCredits = () => {
-    if (!confirm('Reset ALL user credits to 50,000?')) return;
-    handleAction('reset-credits', `reset-credits/${currentEvent?.id}`, { startingAmount: 50000 });
+    if (!confirm("Reset ALL user credits to the event's starting amount?")) return;
+    handleAction('reset-credits', `reset-credits/${currentEvent?.id}`);
   };
 
   const handleFullReset = () => {
     if (!confirm('FULL RESET: Reset all races, delete all bets, reset all credits, and set event to PUBLISHED?')) return;
-    handleAction('full-reset', `reset-event/${currentEvent?.id}`, { 
-      startingCredits: 50000,
+    handleAction('full-reset', `reset-event/${currentEvent?.id}`, {
       resetEventStatus: true,
     });
   };
@@ -407,7 +406,7 @@ export default function AdminTestPage() {
                   variant="ghost"
                   onClick={() => {
                     if (!confirm('Reset to "Horses Submitted"?\n\n• Unassign horses from races\n• Keep horse submissions\n• Delete all bets\n• Reset all credits\n• Set event to PUBLISHED')) return;
-                    handleAction('reset-horses-submitted', `reset-to-horses-submitted/${currentEvent?.id}`, { startingCredits: 50000 });
+                    handleAction('reset-horses-submitted', `reset-to-horses-submitted/${currentEvent?.id}`);
                   }}
                   isLoading={actionLoading === 'reset-horses-submitted'}
                   leftIcon={<RotateCcw className="w-4 h-4" />}
@@ -420,7 +419,7 @@ export default function AdminTestPage() {
                   variant="ghost"
                   onClick={() => {
                     if (!confirm('Reset to "Horses Assigned"?\n\n• Keep horses in races\n• Delete all bets\n• Reset all credits\n• Set event to PUBLISHED (racecard unpublished)')) return;
-                    handleAction('reset-horses-assigned', `reset-to-horses-assigned/${currentEvent?.id}`, { startingCredits: 50000 });
+                    handleAction('reset-horses-assigned', `reset-to-horses-assigned/${currentEvent?.id}`);
                   }}
                   isLoading={actionLoading === 'reset-horses-assigned'}
                   leftIcon={<RotateCcw className="w-4 h-4" />}
@@ -433,7 +432,7 @@ export default function AdminTestPage() {
                   variant="ghost"
                   onClick={() => {
                     if (!confirm('Reset to "Racecard Published"?\n\n• Keep horses in races\n• Delete all bets\n• Reset all credits\n• Set event to RACECARD_PUBLISHED\n• Open betting on all races')) return;
-                    handleAction('reset-racecard-published', `reset-to-racecard-published/${currentEvent?.id}`, { startingCredits: 50000 });
+                    handleAction('reset-racecard-published', `reset-to-racecard-published/${currentEvent?.id}`);
                   }}
                   isLoading={actionLoading === 'reset-racecard-published'}
                   leftIcon={<RotateCcw className="w-4 h-4" />}

@@ -1173,7 +1173,7 @@ export default function HostModePage() {
                 <ul className="text-xs text-gray-500 mb-3 space-y-1">
                   <li>• All horses become unassigned</li>
                   <li>• All bets deleted</li>
-                  <li>• All credits reset to 50,000</li>
+                  <li>• All credits reset to starting amount</li>
                   <li>• Event status → PUBLISHED</li>
                 </ul>
                 <Button
@@ -1200,7 +1200,7 @@ export default function HostModePage() {
                   <li>• Horses stay assigned to races</li>
                   <li>• All commentary deleted</li>
                   <li>• All bets deleted</li>
-                  <li>• All credits reset to 50,000</li>
+                  <li>• All credits reset to starting amount</li>
                 </ul>
                 <Button
                   variant="secondary"
@@ -1226,7 +1226,7 @@ export default function HostModePage() {
                   <li>• Horses stay assigned to races</li>
                   <li>• Commentary preserved</li>
                   <li>• All bets deleted</li>
-                  <li>• All credits reset to 50,000</li>
+                  <li>• All credits reset to starting amount</li>
                   <li>• Event status → LIVE</li>
                 </ul>
                 <Button
