@@ -211,9 +211,10 @@ class ApiClient {
   }
 
   async changePassword(data: {
-    newPassword: string;
-    currentPassword?: string;
+    newPassword?: string;
     newPin?: string;
+    currentPassword?: string;
+    currentPin?: string;
   }): Promise<{ success: boolean; message: string }> {
     return this.request<{ success: boolean; message: string }>('/auth/change-password', {
       method: 'POST',
