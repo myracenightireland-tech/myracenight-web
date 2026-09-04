@@ -229,7 +229,7 @@ export default function NewEventPage() {
               <div className="p-4 bg-gold/10 border border-gold/20 rounded-lg">
                 <p className="text-sm">
                   <span className="text-gold font-semibold">Starting Credits:</span>{' '}
-                  Each attendee gets <strong>{formData.ticketPrice * 1000}</strong> credits to bet with!
+                  Each attendee gets <strong>50,000</strong> credits to bet with!
                 </p>
               </div>
 

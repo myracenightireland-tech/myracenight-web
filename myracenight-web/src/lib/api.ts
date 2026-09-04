@@ -309,24 +309,24 @@ class ApiClient {
   }
 
   // Super Admin Testing Endpoints
-  async adminResetToHorsesSubmitted(eventId: string, startingCredits?: number): Promise<any> {
+  async adminResetToHorsesSubmitted(eventId: string): Promise<any> {
     return this.request(`/admin/reset-to-horses-submitted/${eventId}`, {
       method: 'POST',
-      body: JSON.stringify({ startingCredits }),
+      body: JSON.stringify({}),
     });
   }
 
-  async adminResetToReadyForCommentary(eventId: string, startingCredits?: number): Promise<any> {
+  async adminResetToReadyForCommentary(eventId: string): Promise<any> {
     return this.request(`/admin/reset-to-ready-for-commentary/${eventId}`, {
       method: 'POST',
-      body: JSON.stringify({ startingCredits }),
+      body: JSON.stringify({}),
     });
   }
 
-  async adminResetToReadyToRace(eventId: string, startingCredits?: number): Promise<any> {
+  async adminResetToReadyToRace(eventId: string): Promise<any> {
     return this.request(`/admin/reset-to-ready-to-race/${eventId}`, {
       method: 'POST',
-      body: JSON.stringify({ startingCredits }),
+      body: JSON.stringify({}),
     });
   }
 
@@ -597,10 +597,10 @@ class ApiClient {
     return this.request<{ userId: string; eventId: string; balance: number }>(`/credits/my-balance/${eventId}`);
   }
 
-  async initializeCredits(eventId: string, amount?: number): Promise<{ balance: number; initialized: boolean }> {
+  async initializeCredits(eventId: string): Promise<{ balance: number; initialized: boolean }> {
     return this.request<{ balance: number; initialized: boolean }>('/credits/initialize', {
       method: 'POST',
-      body: JSON.stringify({ eventId, amount }),
+      body: JSON.stringify({ eventId }),
     });
   }
 

@@ -354,7 +354,7 @@ export default function EventDetailPage() {
                   <div>
                     <p className="font-medium">€{event.ticketPrice} per ticket</p>
                     <p className="text-sm text-gray-400">
-                      Includes {event.ticketPrice * 1000} betting credits
+                      Includes 50,000 betting credits
                     </p>
                   </div>
                 </div>

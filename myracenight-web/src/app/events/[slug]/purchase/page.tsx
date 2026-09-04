@@ -155,7 +155,7 @@ export default function PurchaseTicketPage() {
           </div>
           <div className="border-t border-gray-700 pt-4">
             <div className="flex items-center justify-between mb-2"><span className="text-gray-400">Ticket Price</span><span className="text-white text-lg">€{event.ticketPrice}</span></div>
-            <div className="flex items-center justify-between mb-2"><span className="text-gray-400">Starting Credits</span><span className="text-gold font-bold">{(event.ticketPrice * 1000).toLocaleString()} credits</span></div>
+            <div className="flex items-center justify-between mb-2"><span className="text-gray-400">Starting Credits</span><span className="text-gold font-bold">50,000 credits</span></div>
             {event.welcomeDrinkIncluded && <div className="flex items-center justify-between"><span className="text-gray-400">Welcome Drink</span><span className="text-green-400">Included ✓</span></div>}
           </div>
         </Card>
