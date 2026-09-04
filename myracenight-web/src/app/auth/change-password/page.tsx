@@ -9,15 +9,26 @@ import { Button, Input } from '@/components/ui';
 
 // Matches the backend rule in AuthService.changePassword (min 6 characters).
 const MIN_PASSWORD_LENGTH = 6;
+const PIN_LENGTH = 4;
+
+const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, PIN_LENGTH);
 
 export default function ChangePasswordPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, changePassword } = useAuth();
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentCredential, setCurrentCredential] = useState('');
+  const [newCredential, setNewCredential] = useState('');
+  const [confirmCredential, setConfirmCredential] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+
+  const isPhoneUser = user?.authMethod === 'PHONE';
+  // First login (guest ticket): the backend allows changing without the
+  // temporary credential because mustChangePassword is set. A user who
+  // navigates here voluntarily must prove their current credential.
+  const isFirstLogin = user?.mustChangePassword === true;
+  const credentialNoun = isPhoneUser ? 'PIN' : 'password';
 
   // This page is only reachable once logged in (login redirects here when
   // mustChangePassword is set). If somebody lands here without a session,
@@ -40,25 +51,48 @@ export default function ChangePasswordPage() {
     e.preventDefault();
     setError('');
 
-    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    if (isPhoneUser) {
+      if (newCredential.length !== PIN_LENGTH || !/^\d{4}$/.test(newCredential)) {
+        setError(`PIN must be exactly ${PIN_LENGTH} digits.`);
+        return;
+      }
+    } else if (newCredential.length < MIN_PASSWORD_LENGTH) {
       setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
+    if (newCredential !== confirmCredential) {
+      setError(isPhoneUser ? 'PINs do not match.' : 'Passwords do not match.');
+      return;
+    }
+
+    if (!isFirstLogin && !currentCredential) {
+      setError(`Enter your current ${credentialNoun}.`);
       return;
     }
 
     try {
-      // Guest first-login: the backend allows changing without the temporary
-      // password because mustChangePassword is set. On success the store
-      // clears the flag so we don't get bounced back here.
-      await changePassword(newPassword);
+      await changePassword(
+        isPhoneUser
+          ? {
+              newPin: newCredential,
+              ...(isFirstLogin ? {} : { currentPin: currentCredential }),
+            }
+          : {
+              newPassword: newCredential,
+              ...(isFirstLogin ? {} : { currentPassword: currentCredential }),
+            }
+      );
       redirectByRole();
     } catch (err: any) {
-      setError(err.message || 'Failed to change password. Please try again.');
+      setError(err.message || `Failed to change ${credentialNoun}. Please try again.`);
     }
+  };
+
+  const pinInputProps = {
+    inputMode: 'numeric' as const,
+    pattern: '\\d{4}',
+    maxLength: PIN_LENGTH,
   };
 
   return (
@@ -75,10 +109,14 @@ export default function ChangePasswordPage() {
           </Link>
 
           {/* Header */}
-          <h1 className="text-3xl font-display font-bold mb-2">Set a new password</h1>
+          <h1 className="text-3xl font-display font-bold mb-2">
+            {isPhoneUser ? 'Set a new PIN' : 'Set a new password'}
+          </h1>
           <p className="text-gray-400 mb-8">
             {user?.firstName ? `Welcome, ${user.firstName}. ` : ''}
-            Please choose a new password to secure your account before you continue.
+            {isFirstLogin
+              ? `Your ticket came with a temporary ${credentialNoun}, so please choose a new ${credentialNoun} to secure your account before you continue.`
+              : `Confirm your current ${credentialNoun} and choose a new one.`}
           </p>
 
           {/* Error message */}
@@ -90,23 +128,46 @@ export default function ChangePasswordPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {!isFirstLogin && (
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                label={isPhoneUser ? 'Current PIN' : 'Current password'}
+                placeholder={isPhoneUser ? '••••' : '••••••••'}
+                value={currentCredential}
+                onChange={(e) =>
+                  setCurrentCredential(
+                    isPhoneUser ? digitsOnly(e.target.value) : e.target.value
+                  )
+                }
+                leftIcon={<Lock className="w-5 h-5 text-gray-500" />}
+                required
+                {...(isPhoneUser ? pinInputProps : {})}
+              />
+            )}
+
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
-                label="New password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={MIN_PASSWORD_LENGTH}
-                helperText={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+                label={isPhoneUser ? 'New PIN' : 'New password'}
+                placeholder={isPhoneUser ? '••••' : '••••••••'}
+                value={newCredential}
+                onChange={(e) =>
+                  setNewCredential(isPhoneUser ? digitsOnly(e.target.value) : e.target.value)
+                }
+                helperText={
+                  isPhoneUser
+                    ? `Exactly ${PIN_LENGTH} digits.`
+                    : `At least ${MIN_PASSWORD_LENGTH} characters.`
+                }
                 leftIcon={<Lock className="w-5 h-5 text-gray-500" />}
                 required
+                {...(isPhoneUser ? pinInputProps : { minLength: MIN_PASSWORD_LENGTH })}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-9 text-gray-500 hover:text-gray-300"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? `Hide ${credentialNoun}` : `Show ${credentialNoun}`}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -114,13 +175,15 @@ export default function ChangePasswordPage() {
 
             <Input
               type={showPassword ? 'text' : 'password'}
-              label="Confirm new password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              minLength={MIN_PASSWORD_LENGTH}
+              label={isPhoneUser ? 'Confirm new PIN' : 'Confirm new password'}
+              placeholder={isPhoneUser ? '••••' : '••••••••'}
+              value={confirmCredential}
+              onChange={(e) =>
+                setConfirmCredential(isPhoneUser ? digitsOnly(e.target.value) : e.target.value)
+              }
               leftIcon={<Lock className="w-5 h-5 text-gray-500" />}
               required
+              {...(isPhoneUser ? pinInputProps : { minLength: MIN_PASSWORD_LENGTH })}
             />
 
             <Button
@@ -148,7 +211,7 @@ export default function ChangePasswordPage() {
               Almost<br />There
             </h2>
             <p className="text-white/70 text-lg max-w-md">
-              Secure your account with a new password and you&apos;re ready to race.
+              Secure your account with a new {credentialNoun} and you&apos;re ready to race.
             </p>
           </div>
         </div>
