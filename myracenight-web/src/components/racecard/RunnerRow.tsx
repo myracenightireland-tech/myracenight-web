@@ -97,7 +97,7 @@ export default function RunnerRow({
         <span className="flex-1 min-w-0">
           <span className="block text-white font-semibold truncate">{name}</span>
           <span className="block text-xs text-gray-400 truncate">
-            T: {runner.ownerName || 'TBC'} · J: {runner.jockeyName || 'TBC'}
+            O: {runner.ownerName || 'TBC'} · J: {runner.jockeyName || 'TBC'}
           </span>
         </span>
 

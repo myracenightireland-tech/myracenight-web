@@ -1,7 +1,8 @@
 'use client';
 
 // DEV-ONLY silks gallery: every colour x body pattern, every sleeve/cap
-// pattern, and 6 mixed real-world examples. Returns 404 in production.
+// pattern, and 6 mixed real-world examples. Only served when
+// NEXT_PUBLIC_DEV_PAGES=1 (set it in Vercel to enable); 404 otherwise.
 
 import { notFound } from 'next/navigation';
 import Silks from '@/components/silks/Silks';
@@ -92,7 +93,7 @@ const MIXED_EXAMPLES: { label: string; spec: SilksSpec }[] = [
 ];
 
 export default function SilksGalleryPage() {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NEXT_PUBLIC_DEV_PAGES !== '1') {
     notFound();
   }
 
