@@ -8,12 +8,20 @@ import { Loader2, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { BetPreview, BetType } from '@/lib/live/types';
 import { formatCredits, getPotentialProfit, getPotentialReturn } from '@/lib/live/betMath';
+import RunnerRow from '@/components/racecard/RunnerRow';
+import type { SilksSpec } from '@/types';
 
 interface BetSlipHorse {
   id: string;
   name: string;
   odds?: string;
   position?: number;
+  // Runner display fields (silks + saddle-cloth number racecard rows)
+  ownerName?: string;
+  jockeyName?: string;
+  backstory?: string;
+  number?: number | null;
+  silksSpec?: SilksSpec | null;
 }
 
 interface RaceBetSlipProps {
@@ -23,6 +31,8 @@ interface RaceBetSlipProps {
   balance: number;
   disabled?: boolean;
   onBetPlaced?: () => void;
+  /** ids of the viewer's own horses — accent border on their rows */
+  myHorseIds?: string[];
 }
 
 const PREVIEW_DEBOUNCE_MS = 350;
@@ -38,8 +48,10 @@ export default function RaceBetSlip({
   balance,
   disabled = false,
   onBetPlaced,
+  myHorseIds = [],
 }: RaceBetSlipProps) {
   const [horseId, setHorseId] = useState<string>('');
+  const [expandedHorseId, setExpandedHorseId] = useState<string | null>(null);
   const [betType, setBetType] = useState<BetType>('WIN');
   const [stake, setStake] = useState<string>('');
   const [preview, setPreview] = useState<BetPreview | null>(null);
@@ -108,24 +120,28 @@ export default function RaceBetSlip({
 
   return (
     <div className="border-t border-night-lighter pt-4 mt-4" data-testid="bet-slip">
-      {/* Horse selection */}
+      {/* Horse selection — collapsed racecard rows (silks + number), tap to
+          expand the backstory, Bet selects the runner */}
       <label className="block text-sm font-medium text-gray-300 mb-2">Select Horse</label>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-        {selectable.map((h) => (
-          <button
-            key={h.id}
-            type="button"
-            onClick={() => setHorseId(h.id)}
-            className={`p-2 rounded-lg text-left transition border ${
-              horseId === h.id
-                ? 'bg-gold/20 border-gold'
-                : 'bg-night-lighter border-transparent hover:bg-white/10'
-            }`}
-          >
-            <span className="text-white text-sm font-medium block truncate">{h.name}</span>
-            {h.odds && <span className="text-gold text-xs">{h.odds}</span>}
-          </button>
-        ))}
+      <div className="space-y-2 mb-3">
+        {selectable
+          .slice()
+          .sort(
+            (a, b) =>
+              (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER),
+          )
+          .map((h) => (
+            <RunnerRow
+              key={h.id}
+              runner={h}
+              state="pre"
+              isMine={myHorseIds.includes(h.id)}
+              selected={horseId === h.id}
+              expanded={expandedHorseId === h.id}
+              onToggle={() => setExpandedHorseId(expandedHorseId === h.id ? null : h.id)}
+              onBet={() => setHorseId(h.id)}
+            />
+          ))}
       </div>
 
       {/* Bet type */}

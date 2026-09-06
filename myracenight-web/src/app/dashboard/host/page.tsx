@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { Card, Button, Badge, Spinner } from '@/components/ui';
 import RacePlayer from '@/components/race/RacePlayer';
+import Racecard from '@/components/racecard/Racecard';
+import FieldStrip from '@/components/racecard/FieldStrip';
 import { api } from '@/lib/api';
 import RaceResultsPanel from '@/components/results/RaceResultsPanel';
 import BetSlipHistory from '@/components/bets/BetSlipHistory';
@@ -754,7 +756,10 @@ export default function HostModePage() {
                     }}
                     isTestMode={isTestMode}
                   />
-                  
+
+                  {/* FIELD STRIP — runners under the video, full width on the host screen */}
+                  <FieldStrip runners={horsesInRace} className="w-full mt-3" />
+
                   {/* Race Finished Button (fallback if video onFinish doesn't fire) */}
                   <div className="mt-6 p-4 bg-night-lighter rounded-lg text-center">
                     <p className="text-sm text-gray-400 mb-3">
@@ -970,28 +975,21 @@ export default function HostModePage() {
               )}
             </div>
 
-            {/* Horses in Race */}
+            {/* Horses in Race — racecard rows (silks + saddle-cloth number)
+                in the state matching the race */}
             {horsesInRace.length > 0 && currentRace.status !== 'IN_PROGRESS' && (
               <div className="mt-6 pt-6 border-t border-night-lighter">
                 <h3 className="text-lg font-semibold mb-4 text-center">Today's Runners</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {horsesInRace.map((horse, idx) => (
-                    <div
-                      key={horse.id}
-                      className={`p-3 rounded-lg text-center ${
-                        currentRace.status === 'COMPLETED' && currentRace.winningPosition === idx + 1
-                          ? 'bg-gold/20 border border-gold/30'
-                          : 'bg-night-lighter'
-                      }`}
-                    >
-                      <span className="text-gold font-bold mr-2">{idx + 1}.</span>
-                      <span className="font-medium">{horse.name}</span>
-                      {horse.jockeyName && (
-                        <p className="text-xs text-gray-500 mt-1">{horse.jockeyName}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <Racecard
+                  runners={horsesInRace}
+                  state={
+                    currentRace.status === 'COMPLETED'
+                      ? 'post'
+                      : currentRace.status === 'BETTING_CLOSED'
+                        ? 'live'
+                        : 'pre'
+                  }
+                />
               </div>
             )}
           </Card>

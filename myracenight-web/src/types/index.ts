@@ -129,6 +129,19 @@ export interface Ticket {
 
 export type TicketStatus = 'PURCHASED' | 'CHECKED_IN' | 'CANCELLED' | 'REFUNDED';
 
+// Racing silks (structured spec from race metadata, rendered by <Silks />)
+export interface SilksSpecPart {
+  colour: string;
+  pattern: string;
+  patternColour?: string;
+}
+
+export interface SilksSpec {
+  body: SilksSpecPart;
+  sleeves: SilksSpecPart;
+  cap: SilksSpecPart;
+}
+
 // Horse types
 export interface Horse {
   id: string;
@@ -159,6 +172,11 @@ export interface Horse {
   odds?: string;
   finalPosition?: number;
   resultCommentary?: string;
+  // Runner display fields (silks + saddle-cloth number feature)
+  number?: number | null;
+  silksSpec?: SilksSpec | null;
+  finishPosition?: number | null; // only present once the race is COMPLETED
+  comment?: string | null;        // sanitised result comment, COMPLETED only
 }
 
 export type HorseApprovalStatus = 'PENDING' | 'APPROVED' | 'FLAGGED' | 'REJECTED';

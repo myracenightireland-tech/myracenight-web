@@ -14,6 +14,9 @@ import LiveWalletWidget from '@/components/live/LiveWalletWidget';
 import LiveLeaderboard from '@/components/live/LiveLeaderboard';
 import RaceBetSlip from '@/components/live/RaceBetSlip';
 import RacePlayer from '@/components/race/RacePlayer';
+import RunnerRow from '@/components/racecard/RunnerRow';
+import Racecard from '@/components/racecard/Racecard';
+import FieldStrip from '@/components/racecard/FieldStrip';
 import RaceResultsPanel from '@/components/results/RaceResultsPanel';
 import BetSlipHistory from '@/components/bets/BetSlipHistory';
 
@@ -34,11 +37,34 @@ export default function PlayerEventPage() {
   const [error, setError] = useState('');
   const [watchingRace, setWatchingRace] = useState<Race | null>(null);
   const [activeTab, setActiveTab] = useState<'races' | 'results' | 'mybets'>('races');
+  const [expandedMyHorseId, setExpandedMyHorseId] = useState<string | null>(null);
   const [topUpInfo, setTopUpInfo] = useState<{ available: boolean; hasUsed: boolean; topUpAmount: number; topUpPrice: number } | null>(null);
 
   // Live wallet balance (falls back to the last REST-loaded credits value).
   const liveBalance = useLiveStore((s) => s.balance);
   const walletBalance = liveBalance ?? credits;
+
+  // Live race statuses pushed over the existing race:status socket handler
+  // (falls back to the REST-loaded status).
+  const raceStatuses = useLiveStore((s) => s.raceStatuses);
+  const liveRaceStatus = (race: Race) => (raceStatuses[race.id] as Race['status']) || race.status;
+
+  // Viewer's staked credits / payouts per horse for a race (racecard slots).
+  const stakesForRace = (raceId: string) =>
+    myBets
+      .filter((b) => b.raceId === raceId)
+      .reduce<Record<string, number>>((acc, b) => {
+        acc[b.horseId] = (acc[b.horseId] || 0) + b.amount;
+        return acc;
+      }, {});
+  const payoutsForRace = (raceId: string) =>
+    myBets
+      .filter((b) => b.raceId === raceId && b.status === 'WON')
+      .reduce<Record<string, number>>((acc, b) => {
+        acc[b.horseId] =
+          (acc[b.horseId] || 0) + ((b as any).actualReturn || b.potentialWinnings || 0);
+        return acc;
+      }, {});
 
   // Keep a ref to the latest bets so the realtime hook can resolve which bets
   // are still pending when a race completes (to show the "settling…" state).
@@ -169,6 +195,20 @@ export default function PlayerEventPage() {
             </div>
             <div className="flex-1 overflow-hidden">
               <RacePlayer race={watchingRace} onFinish={() => setWatchingRace(null)} />
+              {/* FIELD STRIP — runners under the video while the race runs */}
+              <FieldStrip
+                runners={horses.filter(
+                  (h) => h.raceId === watchingRace.id || h.raceNumber === watchingRace.raceNumber,
+                )}
+                myHorseId={
+                  horses.find(
+                    (h) =>
+                      (h.raceId === watchingRace.id || h.raceNumber === watchingRace.raceNumber) &&
+                      h.userId === user?.id,
+                  )?.id
+                }
+                className="mt-2"
+              />
             </div>
           </div>
         </div>
@@ -278,10 +318,21 @@ export default function PlayerEventPage() {
           ) : (
             <div className="space-y-3">
               {myHorses.map((horse) => (
-                <Card key={horse.id} className="flex items-center justify-between">
-                  <div><h3 className="text-white font-semibold">{horse.name || horse.horseName}</h3><p className="text-gray-400 text-sm">{horse.raceNumber ? `Race ${horse.raceNumber}` : 'Race TBD'} • {horse.ownerName}</p></div>
-                  <Badge className={horse.approvalStatus === 'APPROVED' ? 'bg-green-500' : horse.approvalStatus === 'PENDING' ? 'bg-yellow-500' : horse.approvalStatus === 'FLAGGED' ? 'bg-orange-500' : 'bg-red-500'}>{horse.approvalStatus}</Badge>
-                </Card>
+                <div key={horse.id} className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <RunnerRow
+                      runner={horse}
+                      state="pre"
+                      isMine
+                      expanded={expandedMyHorseId === horse.id}
+                      onToggle={() => setExpandedMyHorseId(expandedMyHorseId === horse.id ? null : horse.id)}
+                    />
+                  </div>
+                  <div className="flex flex-col items-end gap-1 pt-2">
+                    <Badge className={horse.approvalStatus === 'APPROVED' ? 'bg-green-500' : horse.approvalStatus === 'PENDING' ? 'bg-yellow-500' : horse.approvalStatus === 'FLAGGED' ? 'bg-orange-500' : 'bg-red-500'}>{horse.approvalStatus}</Badge>
+                    <span className="text-gray-500 text-xs whitespace-nowrap">{horse.raceNumber ? `Race ${horse.raceNumber}` : 'Race TBD'}</span>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -298,6 +349,8 @@ export default function PlayerEventPage() {
               {races.map((race) => {
                 const raceHorses = horses.filter(h => h.raceId === race.id || h.raceNumber === race.raceNumber);
                 const myBetOnRace = myBets.find(b => b.raceId === race.id);
+                const status = liveRaceStatus(race);
+                const myRaceHorseIds = raceHorses.filter(h => h.userId === user?.id).map(h => h.id);
                 return (
                   <Card key={race.id} className={canBetOnRace(race) ? 'border-green-500/30' : ''}>
                     <div className="flex items-start justify-between mb-4">
@@ -307,17 +360,28 @@ export default function PlayerEventPage() {
                       </div>
                       {myBetOnRace && <div className="text-right"><p className="text-sm text-gray-400">Your Bet</p><p className="text-gold font-bold">{myBetOnRace.amount} credits</p></div>}
                     </div>
-                    {raceHorses.length > 0 && (
+                    {/* RACECARD — collapsed runner rows (silks + number); the
+                        strip shows while the race runs, the post card after
+                        settlement. During BETTING_OPEN the bet slip below
+                        renders the same rows with odds + Bet. */}
+                    {raceHorses.length > 0 && status === 'IN_PROGRESS' && (
+                      <div className="border-t border-gray-700 pt-4">
+                        <FieldStrip
+                          runners={raceHorses}
+                          myHorseId={myRaceHorseIds[0]}
+                        />
+                      </div>
+                    )}
+                    {raceHorses.length > 0 && status !== 'IN_PROGRESS' && status !== 'BETTING_OPEN' && (
                       <div className="border-t border-gray-700 pt-4">
                         <p className="text-sm text-gray-400 mb-3">{raceHorses.length} Horses</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {raceHorses.map((horse, idx) => (
-                            <div key={horse.id} className={`p-2 rounded-lg ${horse.userId === user?.id ? 'bg-gold/10 border border-gold/30' : 'bg-gray-800/50'}`}>
-                              <div className="flex items-center gap-2"><span className="text-gray-500 text-sm">{idx + 1}.</span><span className="text-white text-sm font-medium truncate">{horse.name || horse.horseName}</span></div>
-                              {horse.odds && <p className="text-gold text-xs ml-4">{horse.odds}</p>}
-                            </div>
-                          ))}
-                        </div>
+                        <Racecard
+                          runners={raceHorses}
+                          state={status === 'COMPLETED' ? 'post' : status === 'BETTING_CLOSED' ? 'live' : 'pre'}
+                          myHorseIds={myRaceHorseIds}
+                          stakes={stakesForRace(race.id)}
+                          payouts={payoutsForRace(race.id)}
+                        />
                       </div>
                     )}
                     {/* BET SLIP — preview "you'd win €X" before placing, then place the bet */}
@@ -325,9 +389,20 @@ export default function PlayerEventPage() {
                       <RaceBetSlip
                         raceId={race.id}
                         eventId={eventId}
-                        horses={raceHorses.map((h, idx) => ({ id: h.id, name: h.name || h.horseName, odds: h.odds, position: h.position || idx + 1 }))}
+                        horses={raceHorses.map((h, idx) => ({
+                          id: h.id,
+                          name: h.name || h.horseName,
+                          odds: h.odds,
+                          position: h.position || idx + 1,
+                          ownerName: h.ownerName,
+                          jockeyName: h.jockeyName,
+                          backstory: h.backstory,
+                          number: h.number,
+                          silksSpec: h.silksSpec,
+                        }))}
                         balance={walletBalance}
                         onBetPlaced={handleBetPlaced}
+                        myHorseIds={myRaceHorseIds}
                       />
                     )}
                     {(race.status === 'IN_PROGRESS' || race.status === 'COMPLETED') && (
