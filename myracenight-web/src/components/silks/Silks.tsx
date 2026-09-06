@@ -120,7 +120,7 @@ function renderPattern(region: Region, rawPattern: string, fill: string): ReactN
       break;
     }
     case 'star':
-      out.push(<polygon key="s" points={starPoints(cx, cy, min * 0.42)} fill={fill} />);
+      out.push(<polygon key="s" points={starPoints(cx, cy, min * 0.34)} fill={fill} />);
       break;
     case 'stars':
       [
@@ -267,14 +267,28 @@ function partLabel(kind: string, part: SilksSpecPart): string {
     : `${part.colour} ${kind} with ${pattern}`;
 }
 
-// Geometry (viewBox 0 0 64 64)
+// Geometry (viewBox 0 0 100 100).
+// Draw order: sleeves first (behind), body on top overlapping the shoulders
+// by >=4 units, cap detached top-right.
+const SLEEVE_L_PATH = 'M34 22 L28 30 L8 58 L22 66 L32 46 Z';
+const SLEEVE_R_PATH = 'M66 22 L72 30 L92 58 L78 66 L68 46 Z';
+// Sleeve patterns are drawn in a rotated local frame so they run
+// perpendicular to the sleeve axis, then clipped to the sleeve path.
+// Shoulder midpoint (31,26)/(69,26); the arm axis leans ~24° outwards.
+const SLEEVE_L_TRANSFORM = 'translate(31 26) rotate(24)';
+const SLEEVE_R_TRANSFORM = 'translate(69 26) rotate(-24)';
+const SLEEVE_LOCAL_REGION: Region = { x: -12, y: -8, w: 24, h: 54 };
+
 const BODY_PATH =
-  'M22 24 Q22 22 24 22 L28 22 Q32 27 36 22 L40 22 Q42 22 42 24 L42 56 Q42 58 40 58 L24 58 Q22 58 22 56 Z';
-const BODY_REGION: Region = { x: 22, y: 22, w: 20, h: 36 };
-const SLEEVE_L_REGION: Region = { x: -11, y: 0, w: 10, h: 20 };
-const SLEEVE_R_REGION: Region = { x: 1, y: 0, w: 10, h: 20 };
-const CAP_PATH = 'M22 14 A10 10 0 0 1 42 14 Z';
-const CAP_REGION: Region = { x: 22, y: 4, w: 20, h: 10 };
+  'M32 20 L44 17 Q50 24 56 17 L68 20 L72 30 L72 90 Q72 95 67 95 L33 95 Q28 95 28 90 L28 30 Z';
+// Centred on (50,50) so the body star lands at 50,50 (~30 wide with the
+// 0.34 factor above); tall enough that hoops/stripes fill the whole torso.
+const BODY_REGION: Region = { x: 28, y: 14, w: 44, h: 72 };
+
+const CAP_CX = 86;
+const CAP_CY = 14;
+const CAP_R = 11;
+const CAP_REGION: Region = { x: CAP_CX - CAP_R, y: CAP_CY - CAP_R, w: CAP_R * 2, h: CAP_R * 2 };
 
 export default function Silks({ spec, size, className }: SilksProps) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
@@ -298,14 +312,14 @@ export default function Silks({ spec, size, className }: SilksProps) {
     : [];
   const sleevePatternL = known
     ? renderPattern(
-        SLEEVE_L_REGION,
+        SLEEVE_LOCAL_REGION,
         sleeves!.pattern,
         colourOf(sleeves!.patternColour || defaultPatternColour(sleeves!.colour)),
       )
     : [];
   const sleevePatternR = known
     ? renderPattern(
-        SLEEVE_R_REGION,
+        SLEEVE_LOCAL_REGION,
         sleeves!.pattern,
         colourOf(sleeves!.patternColour || defaultPatternColour(sleeves!.colour)),
       )
@@ -326,7 +340,7 @@ export default function Silks({ spec, size, className }: SilksProps) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 64 64"
+      viewBox="0 0 100 100"
       role="img"
       aria-label={label}
       className={className}
@@ -337,100 +351,50 @@ export default function Silks({ spec, size, className }: SilksProps) {
           <path d={BODY_PATH} />
         </clipPath>
         <clipPath id={clipId('sleeve-l')}>
-          <rect
-            x={SLEEVE_L_REGION.x}
-            y={SLEEVE_L_REGION.y}
-            width={SLEEVE_L_REGION.w}
-            height={SLEEVE_L_REGION.h}
-            rx={3}
-          />
+          <path d={SLEEVE_L_PATH} />
         </clipPath>
         <clipPath id={clipId('sleeve-r')}>
-          <rect
-            x={SLEEVE_R_REGION.x}
-            y={SLEEVE_R_REGION.y}
-            width={SLEEVE_R_REGION.w}
-            height={SLEEVE_R_REGION.h}
-            rx={3}
-          />
+          <path d={SLEEVE_R_PATH} />
         </clipPath>
         <clipPath id={clipId('cap')}>
-          <path d={CAP_PATH} />
+          <circle cx={CAP_CX} cy={CAP_CY} r={CAP_R} />
         </clipPath>
       </defs>
 
-      {/* Left sleeve */}
-      <g transform="translate(23 23) rotate(26)">
-        <g clipPath={`url(#${clipId('sleeve-l')})`}>
-          <rect
-            x={SLEEVE_L_REGION.x}
-            y={SLEEVE_L_REGION.y}
-            width={SLEEVE_L_REGION.w}
-            height={SLEEVE_L_REGION.h}
-            fill={sleeveFill}
-            data-testid="silks-sleeve"
-          />
-          {sleevePatternL}
-        </g>
-        <rect
-          x={SLEEVE_L_REGION.x}
-          y={SLEEVE_L_REGION.y}
-          width={SLEEVE_L_REGION.w}
-          height={SLEEVE_L_REGION.h}
-          rx={3}
-          fill="none"
-          stroke={OUTLINE}
-          strokeWidth={1}
-        />
+      {/* Sleeves first - behind the body, overlapping the shoulders */}
+      <g clipPath={`url(#${clipId('sleeve-l')})`}>
+        <path d={SLEEVE_L_PATH} fill={sleeveFill} data-testid="silks-sleeve" />
+        <g transform={SLEEVE_L_TRANSFORM}>{sleevePatternL}</g>
       </g>
-
-      {/* Right sleeve */}
-      <g transform="translate(41 23) rotate(-26)">
-        <g clipPath={`url(#${clipId('sleeve-r')})`}>
-          <rect
-            x={SLEEVE_R_REGION.x}
-            y={SLEEVE_R_REGION.y}
-            width={SLEEVE_R_REGION.w}
-            height={SLEEVE_R_REGION.h}
-            fill={sleeveFill}
-          />
-          {sleevePatternR}
-        </g>
-        <rect
-          x={SLEEVE_R_REGION.x}
-          y={SLEEVE_R_REGION.y}
-          width={SLEEVE_R_REGION.w}
-          height={SLEEVE_R_REGION.h}
-          rx={3}
-          fill="none"
-          stroke={OUTLINE}
-          strokeWidth={1}
-        />
+      <path d={SLEEVE_L_PATH} fill="none" stroke={OUTLINE} strokeWidth={1.5} />
+      <g clipPath={`url(#${clipId('sleeve-r')})`}>
+        <path d={SLEEVE_R_PATH} fill={sleeveFill} />
+        <g transform={SLEEVE_R_TRANSFORM}>{sleevePatternR}</g>
       </g>
+      <path d={SLEEVE_R_PATH} fill="none" stroke={OUTLINE} strokeWidth={1.5} />
 
-      {/* Body */}
+      {/* Body on top */}
       <g clipPath={`url(#${clipId('body')})`}>
         <path d={BODY_PATH} fill={bodyFill} data-testid="silks-body" />
         {bodyPattern.length > 0 && <g data-testid="silks-pattern-body">{bodyPattern}</g>}
       </g>
-      <path d={BODY_PATH} fill="none" stroke={OUTLINE} strokeWidth={1} />
+      <path d={BODY_PATH} fill="none" stroke={OUTLINE} strokeWidth={1.5} />
 
-      {/* Cap */}
+      {/* Cap - detached, top-right */}
+      <ellipse cx={88} cy={24} rx={9} ry={3} fill={capFill} stroke={OUTLINE} strokeWidth={1.5} />
       <g clipPath={`url(#${clipId('cap')})`}>
-        <path d={CAP_PATH} fill={capFill} data-testid="silks-cap" />
+        <circle cx={CAP_CX} cy={CAP_CY} r={CAP_R} fill={capFill} data-testid="silks-cap" />
         {capPattern}
       </g>
-      <path d={CAP_PATH} fill="none" stroke={OUTLINE} strokeWidth={1} />
-      <rect x={20.5} y={13.6} width={23} height={2.4} rx={1.2} fill={capFill} stroke={OUTLINE} strokeWidth={0.8} />
-      <circle cx={32} cy={4.6} r={1.6} fill={capFill} stroke={OUTLINE} strokeWidth={0.8} />
+      <circle cx={CAP_CX} cy={CAP_CY} r={CAP_R} fill="none" stroke={OUTLINE} strokeWidth={1.5} />
 
       {/* Unknown spec: mid-grey jersey with a "?" */}
       {!known && (
         <text
-          x={32}
-          y={46}
+          x={50}
+          y={68}
           textAnchor="middle"
-          fontSize={18}
+          fontSize={30}
           fontWeight={700}
           fill="#374151"
           data-testid="silks-unknown"
