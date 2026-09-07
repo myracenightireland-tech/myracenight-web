@@ -11,6 +11,7 @@ import { Header } from '@/components/layout/Header';
 import { Card, Button, Badge, EmptyState, Spinner, Input } from '@/components/ui';
 import { ConfirmCommentaryModal } from '@/components/modals/ConfirmCommentaryModal';
 import { RaceCardDisplay } from '@/components/race/RaceCardDisplay';
+import Silks from '@/components/silks/Silks';
 import { api } from '@/lib/api';
 import { useCurrentEvent } from '@/lib/eventContext';
 import { Race, Horse as HorseType } from '@/types';
@@ -926,9 +927,14 @@ export default function RacesSponsorsPage() {
                                   >
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                                        <span className={`font-bold text-lg flex-shrink-0 mt-0.5 ${
-                                          idx === 0 && horse.odds ? 'text-gold' : 'text-gold/60'
-                                        }`}>{idx + 1}</span>
+                                        {/* Rendered silks + saddle-cloth number (from metadata,
+                                            not list position) */}
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                          <Silks spec={horse.silksSpec ?? null} size={44} />
+                                          <span className="font-bold text-lg text-white tabular-nums bg-night px-1.5 py-0.5 rounded border border-night-lighter">
+                                            {horse.number ?? '–'}
+                                          </span>
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2">
                                             <span className="font-medium truncate">{horse.name}</span>
@@ -951,12 +957,6 @@ export default function RacesSponsorsPage() {
                                           {horse.odds && (
                                             <div className="text-xs text-gold mt-1">
                                               Odds: {horse.odds}
-                                            </div>
-                                          )}
-                                          {/* Show silks if available */}
-                                          {horse.silks && horse.silks !== 'Standard colors' && (
-                                            <div className="text-xs text-gray-500 mt-1 line-clamp-1">
-                                              Silks: {horse.silks}
                                             </div>
                                           )}
                                         </div>
